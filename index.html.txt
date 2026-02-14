@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>💗</title>
+  <style>
+    :root{
+      --bg: #efe0d8;
+      --ink: #2b2b2b;
+      --muted: rgba(43,43,43,.70);
+      --accent: #c0253a;
+      --safeT: max(10px, env(safe-area-inset-top));
+      --safeB: max(10px, env(safe-area-inset-bottom));
+      --safeL: max(12px, env(safe-area-inset-left));
+      --safeR: max(12px, env(safe-area-inset-right));
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{background:#000;overflow:hidden;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
+
+    /* --- “Horizontal siempre” (sin obligar a girar) --- */
+    #viewport{position:fixed;inset:0;overflow:hidden;background:var(--bg);}
+    #stage{
+      position:absolute; inset:0;
+      background:
+        radial-gradient(1200px 700px at 65% 40%, rgba(255,255,255,.35), transparent 60%),
+        radial-gradient(900px 600px at 35% 55%, rgba(255,255,255,.22), transparent 62%),
+        var(--bg);
+    }
+    #viewport.portrait #stage{
+      width:100vh; height:100vw;
+      transform-origin: top left;
+      transform: rotate(90deg) translateY(-100vh);
+    }
+    #viewport.landscape #stage{width:100vw;height:100vh;transform:none;}
+
+    .screen{position:absolute;inset:0;display:none}
+    .screen.show{display:block}
+
+    /* --- Pantalla 0: “gira tu teléfono” (solo efecto) --- */
+    #rotateGate{
+      background:#000;color:#fff;
+      display:flex;align-items:center;justify-content:center;
+      padding: calc(var(--safeT) + 18px) calc(var(--safeR) + 18px) calc(var(--safeB) + 18px) calc(var(--safeL) + 18px);
+    }
+    #gateInner{
+      display:flex;gap:clamp(14px,2vw,28px);
+      align-items:center;justify-content:center;
+      width:min(980px,92vw);
+    }
+    .phoneIcon{
+      width:clamp(70px,8vw,110px);
+      height:clamp(140px,16vw,220px);
+      border:3px solid rgba(255,255,255,.92);
+      border-radius:18px;
+      position:relative;
+      transform-origin:50% 50%;
+      animation: phoneTilt 1.2s ease-in-out infinite;
+      opacity:.98;
+    }
+    .phoneIcon::after{
+      content:"";position:absolute;top:9px;left:50%;
+      width:38%;height:6px;border-radius:10px;
+      background:rgba(255,255,255,.92);
+      transform:translateX(-50%);
+      opacity:.85;
+    }
+    .gateLine{
+      width:3px;height:clamp(110px,16vw,220px);
+      background:rgba(255,255,255,.88);border-radius:999px;opacity:.95;
+    }
+    .gateText h1{
+      margin:0;font-weight:900;
+      font-size:clamp(26px,4.2vw,56px);
+      line-height:1.02;letter-spacing:.3px;
+      text-transform:uppercase;
+    }
+    .gateText p{
+      margin:10px 0 0 0;
+      font-size:clamp(14px,1.6vw,18px);
+      color:rgba(255,255,255,.85);
+      max-width:520px;
+    }
+    @keyframes phoneTilt{
+      0%{transform:rotate(0deg)}
+      45%{transform:rotate(-90deg)}
+      100%{transform:rotate(0deg)}
+    }
+
+    /* --- Pantalla 1: corazón + texto (RUSO) --- */
+    #heartScreen{
+      display:flex;align-items:center;justify-content:center;
+      padding: calc(var(--safeT) + 22px) calc(var(--safeR) + 26px) calc(var(--safeB) + 22px) calc(var(--safeL) + 26px);
+    }
+    .heartRow{
+      width:min(1100px,92vw);
+      display:flex;align-items:center;justify-content:center;
+      gap:clamp(18px,3vw,46px);
+    }
+    #heartBtn{
+      border:none;background:transparent;cursor:pointer;padding:0;
+      display:flex;align-items:center;justify-content:center;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.12));
+    }
+    #heartBtn:active{transform:scale(.98)}
+    .heartSvg{width:clamp(78px,9.2vw,120px);height:auto}
+    .hsText{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+    .hsText .title{
+      margin:0;font-weight:900;color:var(--accent);
+      font-size:clamp(30px,4.4vw,64px);line-height:1.02;
+    }
+    .hsText .sub{
+      margin:0;font-weight:700;color:var(--muted);
+      font-size:clamp(15px,1.7vw,21px);
+    }
+    .hsText .rule{
+      width:clamp(220px,30vw,520px);
+      height:4px;border-radius:999px;
+      background:rgba(192,37,58,.55);
+      margin-top:2px;
+    }
+
+    /* --- Pantalla 2: árbol + texto --- */
+    #treeScreen{
+      padding: calc(var(--safeT) + 12px) calc(var(--safeR) + 14px) calc(var(--safeB) + 12px) calc(var(--safeL) + 14px);
+    }
+    .layout{
+      width:100%;height:100%;
+      display:grid;
+      grid-template-columns: 1.05fr 1fr;  /* texto un poco más ancho */
+      gap: clamp(14px, 2vw, 26px);
+      align-items:center;
+    }
+    .msg{
+      padding-left: clamp(8px, 1.2vw, 18px);
+      color: var(--ink);
+      user-select:none;
+    }
+    .msg h2{
+      margin:0 0 10px 0;
+      font-size: clamp(18px, 2.1vw, 28px);
+      font-weight: 900;
+      color: rgba(43,43,43,.88);
+      letter-spacing:.2px;
+    }
+    .msg p{
+      margin:0;
+      font-size: clamp(14px, 1.55vw, 18px); /* más pequeño para que entre todo */
+      line-height: 1.38;
+      font-weight: 650;
+      color: rgba(43,43,43,.86);
+      white-space: pre-wrap;
+    }
+    .canvasWrap{
+      width:100%;
+      height:min(74vh, 520px);
+      position:relative;
+    }
+    canvas{width:100%;height:100%;display:block}
+
+    /* línea de suelo */
+    .ground{
+      position:absolute;
+      left:0; right:0;
+      bottom: 10%;
+      height: 2px;
+      background: rgba(30,30,30,.55);
+      border-radius:999px;
+      opacity:.9;
+      pointer-events:none;
+    }
+
+    /* para pantallas muy pequeñas */
+    @media (max-width: 900px){
+      .layout{grid-template-columns: 1.1fr .9fr;}
+      .canvasWrap{height:min(70vh, 460px);}
+    }
+  </style>
+</head>
+
+<body>
+  <div id="viewport">
+    <div id="stage">
+
+      <!-- Pantalla 0 -->
+      <section id="rotateGate" class="screen show">
+        <div id="gateInner">
+          <div class="phoneIcon" aria-hidden="true"></div>
+          <div class="gateLine" aria-hidden="true"></div>
+          <div class="gateText">
+            <h1>Пожалуйста, поверни телефон</h1>
+            <p>Это просто эффект — поворачивать необязательно. Сейчас начнётся сюрприз ✨</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pantalla 1 -->
+      <section id="heartScreen" class="screen">
+        <div class="heartRow">
+          <button id="heartBtn" aria-label="Нажми на сердечко">
+            <!-- corazón limpio, no deformado -->
+            <svg class="heartSvg" viewBox="0 0 120 110" role="img" aria-hidden="true">
+              <defs>
+                <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#ff4d6d"/>
+                  <stop offset="1" stop-color="#c0253a"/>
+                </linearGradient>
+              </defs>
+              <path fill="url(#g)" d="M60 104s-43-26-52-52C2 36 10 22 25 17c10-3 20 1 27 9 7-8 17-12 27-9 15 5 23 19 17 35-9 26-53 52-53 52z"/>
+            </svg>
+          </button>
+          <div class="hsText">
+            <p class="title">С Днём святого Валентина!</p>
+            <div class="rule"></div>
+            <p class="sub">Нажми на сердечко 💗</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pantalla 2 -->
+      <section id="treeScreen" class="screen">
+        <div class="layout">
+          <div class="msg">
+            <h2>Для тебя, моя особенная:</h2>
+            <p id="msgText"></p>
+          </div>
+          <div class="canvasWrap" id="canvasWrap">
+            <canvas id="c"></canvas>
+            <div class="ground"></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script>
+    const viewport = document.getElementById('viewport');
+    const screens = {
+      gate: document.getElementById('rotateGate'),
+      heart: document.getElementById('heartScreen'),
+      tree: document.getElementById('treeScreen')
+    };
+
+    function setViewportMode(){
+      const portrait = window.innerHeight > window.innerWidth;
+      viewport.classList.toggle('portrait', portrait);
+      viewport.classList.toggle('landscape', !portrait);
+    }
+    window.addEventListener('resize', setViewportMode);
+    setViewportMode();
+
+    function show(name){
+      Object.values(screens).forEach(s => s.classList.remove('show'));
+      screens[name].classList.add('show');
+    }
+
+    // 1) Inicio: gate 4s => heart
+    show('gate');
+    setTimeout(() => show('heart'), 4000);
+
+    // 2) Click corazón => árbol
+    document.getElementById('heartBtn').addEventListener('click', () => {
+      show('tree');
+      startTreeScene();
+    });
+
+    // ----------- Árbol en canvas -----------
+    const wrap = document.getElementById('canvasWrap');
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+
+    let W=0, H=0, dpr=1;
+    function resizeCanvas(){
+      const r = wrap.getBoundingClientRect();
+      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      W = Math.max(1, Math.floor(r.width));
+      H = Math.max(1, Math.floor(r.height));
+      canvas.width = Math.floor(W*dpr);
+      canvas.height = Math.floor(H*dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+
+    // Mensaje en ruso (puedes cambiarlo aquí)
+    const fullMsg =
+`Иногда мне кажется, что мир становится теплее, когда я думаю о тебе.
+Ты умеешь делать обычный день особенным — просто своим присутствием.
+Мне хочется беречь тебя, поддерживать и радовать, даже на расстоянии.
+Я ценю каждую нашу минуту, каждое слово и каждую улыбку.
+Я очень скучаю по тебе… и правда, очень тебя люблю.`;
+
+    function rand(a,b){ return a + Math.random()*(b-a); }
+    function choice(arr){ return arr[(Math.random()*arr.length)|0]; }
+
+    function heartPath(ctx, x, y, s, rot=0){
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(rot);
+      ctx.scale(s,s);
+      ctx.beginPath();
+      ctx.moveTo(0, 0.35);
+      ctx.bezierCurveTo(0.55, 0.1, 0.55, -0.45, 0, -0.25);
+      ctx.bezierCurveTo(-0.55, -0.45, -0.55, 0.1, 0, 0.35);
+      ctx.closePath();
+      ctx.restore();
+    }
+
+    function drawBranch(seg, t){
+      // seg: {x1,y1,x2,y2,w1,w2}
+      const x = seg.x1 + (seg.x2 - seg.x1)*t;
+      const y = seg.y1 + (seg.y2 - seg.y1)*t;
+      const w = seg.w1 + (seg.w2 - seg.w1)*t;
+
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(35,25,25,.92)';
+      ctx.lineWidth = w;
+      ctx.beginPath();
+      ctx.moveTo(seg.x1, seg.y1);
+      ctx.lineTo(x,y);
+      ctx.stroke();
+    }
+
+    // Leaf positions forming a big heart
+    function generateLeafPoints(cx, cy, scale, n){
+      const pts = [];
+      for(let i=0;i<n;i++){
+        const t = rand(0, Math.PI*2);
+        // classic heart curve
+        const x = 16*Math.pow(Math.sin(t),3);
+        const y = 13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t);
+        // jitter (control density)
+        const jx = rand(-0.7, 0.7);
+        const jy = rand(-0.6, 0.6);
+        pts.push({
+          x: cx + (x + jx)*scale,
+          y: cy - (y + jy)*scale,
+          s: rand(6, 12),
+          rot: rand(-0.5, 0.5),
+          col: choice([
+            'rgba(255,77,109,.95)',
+            'rgba(192,37,58,.92)',
+            'rgba(255,143,170,.92)',
+            'rgba(255,110,150,.92)'
+          ])
+        });
+      }
+      return pts;
+    }
+
+    let raf = null;
+    function startTreeScene(){
+      cancelAnimationFrame(raf);
+      resizeCanvas();
+
+      // posiciones base
+      // árbol un poquito más a la izquierda (antes estaba más a la derecha)
+      const trunkX = W*0.53;
+      const groundY = H*0.90;
+
+      // tronco más ancho abajo
+      const trunkTopY = H*0.32;
+      const trunkBottomY = groundY;
+      const baseW = Math.max(28, W*0.075);   // base más ancha
+      const topW  = Math.max(14, W*0.038);
+
+      // ramas (estilo limpio, y luego las hojas las cubrirán)
+      const branches = [
+        { x1: trunkX, y1: trunkTopY+22, x2: trunkX - W*0.16, y2: H*0.28, w1: 10, w2: 6 },
+        { x1: trunkX, y1: trunkTopY+22, x2: trunkX + W*0.16, y2: H*0.28, w1: 10, w2: 6 },
+        { x1: trunkX, y1: trunkTopY+28, x2: trunkX - W*0.10, y2: H*0.22, w1: 8,  w2: 5 },
+        { x1: trunkX, y1: trunkTopY+28, x2: trunkX + W*0.10, y2: H*0.22, w1: 8,  w2: 5 },
+        { x1: trunkX, y1: trunkTopY+36, x2: trunkX - W*0.06, y2: H*0.18, w1: 7,  w2: 4 },
+        { x1: trunkX, y1: trunkTopY+36, x2: trunkX + W*0.06, y2: H*0.18, w1: 7,  w2: 4 },
+      ];
+
+      // Hojas: “95%” (muchas, pero no exagerado)
+      const leafCount = Math.floor(Math.max(260, Math.min(520, (W*H)/900))); // se ajusta al tamaño
+      const leafCenterX = trunkX;
+      const leafCenterY = H*0.32;
+      const leafScale = Math.min(W, H) * 0.020; // tamaño del corazón
+      let leaves = generateLeafPoints(leafCenterX, leafCenterY, leafScale, leafCount);
+
+      // También cubrimos el tronco (para que casi no se vea), excepto la base
+      const trunkCover = [];
+      const coverN = Math.floor(leafCount*0.18);
+      for(let i=0;i<coverN;i++){
+        trunkCover.push({
+          x: trunkX + rand(-topW*1.0, topW*1.0),
+          y: rand(H*0.40, H*0.80),  // no tapar la base del todo
+          s: rand(7, 12),
+          rot: rand(-0.7, 0.7),
+          col: choice([
+            'rgba(255,143,170,.92)',
+            'rgba(255,77,109,.92)',
+            'rgba(192,37,58,.88)'
+          ])
+        });
+      }
+
+      // Partículas de viento / caída
+      let petals = [];
+      function spawnPetal(){
+        const p = {
+          x: leafCenterX + rand(-W*0.22, W*0.22),
+          y: leafCenterY + rand(-H*0.10, H*0.10),
+          vx: rand(-0.55, -0.15),   // viento hacia la izquierda
+          vy: rand(0.35, 0.75),
+          rot: rand(-1, 1),
+          vr: rand(-0.02, 0.02),
+          s: rand(6, 10),
+          life: rand(160, 260),
+          col: choice([
+            'rgba(255,77,109,.65)',
+            'rgba(255,143,170,.65)',
+            'rgba(192,37,58,.60)'
+          ])
+        };
+        petals.push(p);
+      }
+
+      // anim phases
+      const t0 = performance.now();
+      const growDur = 1700;   // tronco+ramas
+      const leafDur = 1200;   // hojas aparecen
+      const typeDelay = 400;  // mini pausa antes de escribir
+
+      // typing
+      const msgEl = document.getElementById('msgText');
+      msgEl.textContent = "";
+      let typingStarted = false;
+
+      function startTyping(){
+        if(typingStarted) return;
+        typingStarted = true;
+        const text = fullMsg;
+        let i = 0;
+        const speed = 18; // letra por letra
+        const timer = setInterval(() => {
+          i++;
+          msgEl.textContent = text.slice(0, i);
+          if(i >= text.length) clearInterval(timer);
+        }, speed);
+      }
+
+      function drawTrunk(progress){
+        // tronco tipo “cinta” con base más ancha
+        const y = trunkTopY + (trunkBottomY - trunkTopY)*progress;
+        const w = topW + (baseW - topW)*progress;
+
+        ctx.strokeStyle = 'rgba(35,25,25,.95)';
+        ctx.lineCap = 'round';
+        ctx.lineWidth = w;
+        ctx.beginPath();
+        ctx.moveTo(trunkX, trunkTopY);
+        ctx.lineTo(trunkX, y);
+        ctx.stroke();
+
+        // pequeña “raíz” en la base cuando termina
+        if(progress > 0.92){
+          const f = (progress-0.92)/0.08;
+          ctx.lineWidth = baseW*0.35;
+          ctx.beginPath();
+          ctx.moveTo(trunkX, groundY - 2);
+          ctx.lineTo(trunkX - baseW*0.55*f, groundY + baseW*0.10*f);
+          ctx.moveTo(trunkX, groundY - 2);
+          ctx.lineTo(trunkX + baseW*0.55*f, groundY + baseW*0.10*f);
+          ctx.stroke();
+        }
+      }
+
+      function tick(now){
+        const dt = now - t0;
+
+        ctx.clearRect(0,0,W,H);
+
+        // fondo suave (ya está en CSS, pero el canvas se limpia)
+        // tronco + ramas crecen
+        const g = Math.min(1, dt / growDur);
+        drawTrunk(g);
+        for(const b of branches){
+          drawBranch(b, g);
+        }
+
+        // Hojas aparecen después del grow (con fade-in)
+        const lT = Math.max(0, dt - growDur);
+        const lP = Math.min(1, lT / leafDur);
+
+        // dibujar hojas (corazones) formando corazón
+        function drawLeafSet(arr, alphaMul){
+          for(let k=0;k<arr.length;k++){
+            const p = arr[k];
+            ctx.fillStyle = p.col.replace(/rgba\(([^)]+)\)/, (m, inside) => {
+              // mantener color pero multiplicar alpha
+              const parts = inside.split(',').map(s=>s.trim());
+              const a = parseFloat(parts[3] ?? "1");
+              const na = Math.max(0, Math.min(1, a*alphaMul));
+              return `rgba(${parts[0]},${parts[1]},${parts[2]},${na})`;
+            });
+            heartPath(ctx, p.x, p.y, p.s/20, p.rot);
+            ctx.fill();
+          }
+        }
+
+        if(lP > 0){
+          // hojas principales
+          drawLeafSet(leaves, 0.05 + 0.95*lP);
+          // hojas para cubrir tronco (para que casi no se vea)
+          drawLeafSet(trunkCover, 0.04 + 0.90*lP);
+        }
+
+        // viento / caída (empieza cuando ya hay hojas)
+        if(lP > 0.25){
+          if(Math.random() < 0.55) spawnPetal();
+        }
+        for(let i=petals.length-1;i>=0;i--){
+          const p = petals[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.vr;
+          p.life -= 1;
+          // leve “olas” del viento
+          p.x += Math.sin((now/220) + i)*0.25;
+
+          ctx.fillStyle = p.col;
+          heartPath(ctx, p.x, p.y, p.s/20, p.rot);
+          ctx.fill();
+
+          if(p.life <= 0 || p.y > groundY + 60 || p.x < -80) petals.splice(i,1);
+        }
+
+        // typing cuando termina el leaf fade
+        if(!typingStarted && lT > leafDur + typeDelay){
+          startTyping();
+        }
+
+        raf = requestAnimationFrame(tick);
+      }
+
+      // mantener canvas perfecto en resize
+      window.addEventListener('resize', () => {
+        resizeCanvas();
+      }, {passive:true});
+
+      raf = requestAnimationFrame(tick);
+    }
+  </script>
+</body>
+</html>
