@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>💗</title>
+  <style>
+    :root{
+      --bg1:#f7e7e2;
+      --bg2:#f3d6db;
+      --ink:#2d2525;
+      --muted:rgba(45,37,37,.55);
+      --accent:#d84a74;
+      --tree:#3b2b2b;
+      --panelW:min(44vw,520px);
+      --safeL:max(16px, env(safe-area-inset-left));
+      --safeR:max(16px, env(safe-area-inset-right));
+      --safeT:max(14px, env(safe-area-inset-top));
+      --safeB:max(14px, env(safe-area-inset-bottom));
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0}
+    body{
+      overflow:hidden;
+      background:
+        radial-gradient(1200px 800px at 20% 15%, rgba(255,255,255,.55), transparent 60%),
+        radial-gradient(900px 600px at 70% 25%, rgba(255,255,255,.35), transparent 60%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      color:var(--ink);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    /* Pantallas */
+    .screen{position:fixed; inset:0; display:none}
+    .screen.show{display:block}
+
+    /* ---- Pantalla 1: corazón ---- */
+    #screenHeart{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:calc(var(--safeT) + 24px) var(--safeR) calc(var(--safeB) + 24px) var(--safeL);
+      text-align:center;
+    }
+    .heartWrap{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      align-items:center;
+      justify-content:center;
+      max-width:560px;
+    }
+    .hintTop{
+      position:fixed;
+      top:calc(var(--safeT) + 10px);
+      right:calc(var(--safeR) + 12px);
+      color:var(--muted);
+      font-weight:600;
+      font-size:14px;
+      letter-spacing:.2px;
+      user-select:none;
+      pointer-events:none;
+    }
+    .centerMsg{
+      font-size:18px;
+      line-height:1.35;
+      color:var(--ink);
+      user-select:none;
+    }
+    .subMsg{
+      font-size:14px;
+      color:var(--muted);
+      user-select:none;
+    }
+
+    /* Corazón botón */
+    #startBtn{
+      width:120px;
+      height:120px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #startBtn:active{transform:scale(.98)}
+    .heart{
+      width:120px;height:120px;
+      position:relative;
+      transform:rotate(-45deg);
+      margin:0 auto;
+      animation:pulse 1.25s ease-in-out infinite;
+      filter: drop-shadow(0 14px 18px rgba(0,0,0,.16));
+    }
+    .heart:before,.heart:after{
+      content:"";
+      position:absolute;
+      width:120px;height:120px;
+      background:var(--accent);
+      border-radius:50%;
+      top:0; left:0;
+    }
+    .heart:after{left:60px}
+    .heart:before{top:-60px}
+    .heartCore{
+      position:absolute;
+      width:120px;height:120px;
+      background:var(--accent);
+      top:0;left:0;
+      border-radius:18px;
+    }
+    @keyframes pulse{
+      0%,100%{transform:rotate(-45deg) scale(1)}
+      50%{transform:rotate(-45deg) scale(1.06)}
+    }
+
+    /* ---- Pantalla 2: árbol ---- */
+    #screenTree{ }
+    #canvas{
+      position:fixed; inset:0;
+      width:100%; height:100%;
+      display:block;
+    }
+
+    /* Texto lateral sin recuadro */
+    .sideText{
+      position:fixed;
+      top:calc(var(--safeT) + 28px);
+      left:calc(var(--safeL) + 24px);
+      width:var(--panelW);
+      max-width:560px;
+      font-size:18px;
+      line-height:1.45;
+      font-weight:500;
+      color:var(--ink);
+      text-shadow: 0 2px 12px rgba(255,255,255,.35);
+      pointer-events:none;
+      user-select:none;
+    }
+    .sideTitle{
+      font-weight:800;
+      font-size:26px;
+      margin-bottom:10px;
+    }
+
+    /* escritura por palabras */
+    .typeLine{
+      white-space:pre-wrap;
+    }
+
+    /* Nota tipo TikTok (no obliga) */
+    .tipRotate{
+      position:fixed;
+      top:calc(var(--safeT) + 14px);
+      right:calc(var(--safeR) + 16px);
+      font-size:15px;
+      color:var(--muted);
+      font-weight:700;
+      user-select:none;
+      pointer-events:none;
+    }
+
+    /* Responsive: si pantalla muy angosta, texto arriba */
+    @media (max-width: 420px){
+      .sideText{width:calc(100vw - var(--safeL) - var(--safeR) - 32px); font-size:16px}
+      .sideTitle{font-size:22px}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Pantalla 1 -->
+  <section id="screenHeart" class="screen show">
+    <div class="hintTop">Можно повернуть телефон 😉</div>
+
+    <div class="heartWrap">
+      <div class="centerMsg"><b>Нажми на сердечко</b></div>
+      <div class="subMsg">У меня для тебя небольшой сюрприз ✨</div>
+
+      <button id="startBtn" aria-label="start">
+        <div class="heart">
+          <div class="heartCore"></div>
+        </div>
+      </button>
+
+      <div class="subMsg">Тронь сердечко — и всё начнётся</div>
+    </div>
+  </section>
+
+  <!-- Pantalla 2 -->
+  <section id="screenTree" class="screen">
+    <div class="tipRotate">Коснись текста, чтобы пропустить ✨</div>
+    <canvas id="canvas"></canvas>
+
+    <div class="sideText" id="sideText">
+      <div class="sideTitle">Для тебя, моя особенная:</div>
+      <div class="typeLine" id="typeLine"></div>
+    </div>
+  </section>
+
+<script>
+(() => {
+  // ====== TEXTOS (RUSO) ======
+  const MESSAGE_RU =
+`Иногда мне кажется, что мир становится теплее, когда я думаю о тебе.
+Ты умеешь делать обычный день особенным — просто своим присутствием.
+Мне хочется беречь тебя, поддерживать и радовать, даже на расстоянии.
+Я ценю каждую нашу минуту, каждое слово и каждую улыбку.
+Я очень скучаю… и я правда, очень тебя люблю.`;
+
+  // ====== ELEMENTOS ======
+  const screenHeart = document.getElementById("screenHeart");
+  const screenTree  = document.getElementById("screenTree");
+  const startBtn    = document.getElementById("startBtn");
+  const typeLine    = document.getElementById("typeLine");
+  const sideText    = document.getElementById("sideText");
+  const canvas      = document.getElementById("canvas");
+  const ctx         = canvas.getContext("2d");
+
+  // ====== CANVAS SIZE ======
+  function resizeCanvas(){
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    canvas.width  = Math.floor(innerWidth * dpr);
+    canvas.height = Math.floor(innerHeight * dpr);
+    canvas.style.width  = innerWidth + "px";
+    canvas.style.height = innerHeight + "px";
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener("resize", resizeCanvas);
+
+  // ====== TIPO ESCRITURA POR PALABRAS ======
+  let typingTimer = null;
+  function startTyping(){
+    if(typingTimer) clearInterval(typingTimer);
+    typeLine.textContent = "";
+    const words = MESSAGE_RU.split(/\s+/);
+    let i = 0;
+
+    typingTimer = setInterval(() => {
+      if(i >= words.length){
+        clearInterval(typingTimer);
+        typingTimer = null;
+        return;
+      }
+      typeLine.textContent += (i===0 ? "" : " ") + words[i];
+      i++;
+    }, 220);
+  }
+
+  // tocar texto para saltar escritura
+  screenTree.addEventListener("click", (e)=>{
+    // si toca dentro del panel, saltamos
+    if(typingTimer){
+      clearInterval(typingTimer);
+      typingTimer = null;
+      typeLine.textContent = MESSAGE_RU;
+    }
+  });
+
+  // ====== ÁRBOL: segmentos (crecimiento) ======
+  // Dibujaremos un tronco + ramas simples (como el ejemplo que mandaste),
+  // y luego pondremos corazones como hojas.
+
+  // Posición del árbol (más a la derecha)
+  function treeBase(){
+    return {
+      x: innerWidth * 0.68,     // MÁS A LA DERECHA
+      y: innerHeight * 0.86
+    };
+  }
+
+  // Segmentos: cada uno crece desde 0->1
+  const segments = [];
+  function makeSegments(){
+    segments.length = 0;
+    const base = treeBase();
+
+    // tronco
+    segments.push(seg(base.x, base.y, base.x, base.y - 220, 18));
+    // ramas principales (estilo simple)
+    segments.push(seg(base.x, base.y - 150, base.x - 70, base.y - 260, 10));
+    segments.push(seg(base.x, base.y - 160, base.x + 70, base.y - 270, 10));
+
+    // subramas
+    segments.push(seg(base.x - 40, base.y - 210, base.x - 120, base.y - 300, 7));
+    segments.push(seg(base.x - 20, base.y - 220, base.x - 40, base.y - 320, 6));
+
+    segments.push(seg(base.x + 40, base.y - 220, base.x + 130, base.y - 300, 7));
+    segments.push(seg(base.x + 20, base.y - 230, base.x + 50, base.y - 330, 6));
+
+    // puntas extra
+    segments.push(seg(base.x - 85, base.y - 255, base.x - 160, base.y - 290, 5));
+    segments.push(seg(base.x + 85, base.y - 260, base.x + 160, base.y - 295, 5));
+  }
+
+  function seg(x1,y1,x2,y2,w){
+    return {x1,y1,x2,y2,w, t:0}; // t 0..1
+  }
+
+  // ====== HOJAS/CORAZONES ======
+  const leaves = [];
+  const petals = []; // corazones volando
+  let running = false;
+  let startTime = 0;
+
+  function buildLeaves(){
+    leaves.length = 0;
+    // Puntos a lo largo de ramas (excepto tronco)
+    const branchSegs = segments.slice(1);
+    for(const s of branchSegs){
+      const count = 18; // densidad
+      for(let i=0;i<count;i++){
+        const u = (i+1)/(count+1);
+        const x = lerp(s.x1,s.x2,u) + rand(-10,10);
+        const y = lerp(s.y1,s.y2,u) + rand(-10,10);
+        const size = rand(8,16);
+        const hue = rand(0,1) < 0.65 ? "pink" : "red";
+        leaves.push({x,y,size,hue,alpha:0, appearAt: rand(0.15, 1.0)});
+      }
+    }
+  }
+
+  // ====== DIBUJO ======
+  function clear(){
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+  }
+
+  function drawTree(){
+    // dibuja segmentos con su crecimiento
+    ctx.lineCap = "round";
+    ctx.strokeStyle = getCSS("--tree");
+
+    for(const s of segments){
+      const t = easeOutCubic(s.t);
+      const x = lerp(s.x1,s.x2,t);
+      const y = lerp(s.y1,s.y2,t);
+      ctx.lineWidth = s.w;
+      ctx.beginPath();
+      ctx.moveTo(s.x1,s.y1);
+      ctx.lineTo(x,y);
+      ctx.stroke();
+    }
+  }
+
+  function drawLeaves(progress){
+    // aparecen después del árbol (fade)
+    for(const l of leaves){
+      const targetA = (progress > l.appearAt) ? 1 : 0;
+      l.alpha = lerp(l.alpha, targetA, 0.06);
+      if(l.alpha < 0.02) continue;
+
+      drawHeart(l.x, l.y, l.size, l.hue, l.alpha);
+    }
+  }
+
+  function drawPetals(){
+    for(const p of petals){
+      drawHeart(p.x, p.y, p.size, p.hue, p.alpha);
+    }
+  }
+
+  function drawHeart(x,y,size,variant,alpha){
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(x,y);
+    ctx.rotate(-Math.PI/4);
+    const s = size;
+
+    ctx.fillStyle = variant==="red" ? "#d84a74" : "#ef6fa0";
+    ctx.beginPath();
+    // corazón simple
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(0, -s, -s, -s, -s, 0);
+    ctx.bezierCurveTo(-s, s, 0, s*1.25, 0, s*1.8);
+    ctx.bezierCurveTo(0, s*1.25, s, s, s, 0);
+    ctx.bezierCurveTo(s, -s, 0, -s, 0, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // ====== ANIMACIÓN: crecimiento + viento ======
+  function startTreeScene(){
+    screenHeart.classList.remove("show");
+    screenTree.classList.add("show");
+
+    resizeCanvas();
+    makeSegments();
+    buildLeaves();
+    petals.length = 0;
+
+    // reset growth
+    for(const s of segments) s.t = 0;
+
+    running = true;
+    startTime = performance.now();
+
+    // empezar escritura cuando ya está creciendo bonito
+    setTimeout(startTyping, 1800);
+
+    requestAnimationFrame(tick);
+    spawnPetalsLoop();
+  }
+
+  function tick(now){
+    if(!running) return;
+    const elapsed = (now - startTime) / 1000; // segundos
+    clear();
+
+    // progreso de crecimiento del árbol
+    // tronco primero, luego ramas
+    for(let i=0;i<segments.length;i++){
+      const s = segments[i];
+      const delay = i===0 ? 0.0 : 0.35 + (i-1)*0.12;
+      const dur = i===0 ? 1.15 : 0.75;
+      const p = clamp((elapsed - delay)/dur, 0, 1);
+      s.t = Math.max(s.t, p);
+    }
+
+    drawTree();
+
+    // progreso global (para hojas)
+    const growDone = segments.every(s=>s.t>=1);
+    const leafProgress = clamp((elapsed - 1.3)/1.8, 0, 1);
+    drawLeaves(leafProgress);
+
+    // actualizar corazones volando
+    updatePetals();
+    drawPetals();
+
+    requestAnimationFrame(tick);
+  }
+
+  function spawnPetalsLoop(){
+    // genera algunos corazones que salen de la copa y vuelan con el viento
+    const interval = setInterval(()=>{
+      if(!running){ clearInterval(interval); return; }
+
+      // empezar a tirar cuando ya hay hojas apareciendo
+      const t = (performance.now() - startTime)/1000;
+      if(t < 2.4) return;
+
+      // spawn 1-3
+      const n = Math.random() < 0.55 ? 1 : (Math.random()<0.65 ? 2 : 3);
+      for(let i=0;i<n;i++){
+        spawnPetal();
+      }
+    }, 250);
+  }
+
+  function spawnPetal(){
+    const base = treeBase();
+    const x = base.x + rand(-170, 170);
+    const y = base.y - 310 + rand(-90, 70);
+
+    petals.push({
+      x, y,
+      vx: rand(0.6, 1.8),      // viento a la derecha
+      vy: rand(0.6, 1.4),      // cae
+      spin: rand(-0.02, 0.02),
+      rot: rand(0, Math.PI*2),
+      size: rand(8, 16),
+      hue: Math.random()<0.35 ? "red" : "pink",
+      alpha: 1,
+      life: rand(3.5, 6.0),
+      age: 0
+    });
+
+    // limitar cantidad
+    if(petals.length > 140) petals.splice(0, petals.length-140);
+  }
+
+  function updatePetals(){
+    const dt = 1/60;
+    for(const p of petals){
+      p.age += dt;
+      p.x += p.vx*2.0;
+      p.y += p.vy*2.2;
+
+      // un poquito de viento
+      p.x += Math.sin((p.age*3)+(p.y*0.01))*0.6;
+
+      // fade out
+      const fade = 1 - clamp(p.age / p.life, 0, 1);
+      p.alpha = Math.max(0, fade);
+
+      // si sale de pantalla, matar
+      if(p.y > innerHeight + 60 || p.x > innerWidth + 80) p.alpha = 0;
+    }
+    // limpiar muertos
+    for(let i=petals.length-1;i>=0;i--){
+      if(petals[i].alpha<=0) petals.splice(i,1);
+    }
+  }
+
+  // ====== HELPERS ======
+  function lerp(a,b,t){ return a + (b-a)*t; }
+  function clamp(v,min,max){ return Math.max(min, Math.min(max,v)); }
+  function rand(a,b){ return a + Math.random()*(b-a); }
+  function easeOutCubic(t){ return 1 - Math.pow(1-t, 3); }
+  function getCSS(varName){ return getComputedStyle(document.documentElement).getPropertyValue(varName).trim(); }
+
+  // ====== START ======
+  startBtn.addEventListener("click", ()=>{
+    // NO obligamos a girar (estilo TikTok)
+    startTreeScene();
+  });
+
+})();
+</script>
+</body>
+</html>
