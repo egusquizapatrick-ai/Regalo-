@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>💞</title>
+  <style>
+    :root{
+      --bg: #f3e1d9;
+      --ink: rgba(35, 25, 25, .85);
+      --accent: #c53a4a;
+      --safeT: max(14px, env(safe-area-inset-top));
+      --safeB: max(14px, env(safe-area-inset-bottom));
+      --safeL: max(16px, env(safe-area-inset-left));
+      --safeR: max(16px, env(safe-area-inset-right));
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; margin:0; }
+    body{
+      background: var(--bg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow:hidden;
+    }
+
+    .screen{
+      position:fixed; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      padding: calc(var(--safeT) + 12px) calc(var(--safeR) + 16px) calc(var(--safeB) + 12px) calc(var(--safeL) + 16px);
+      transition: opacity .45s ease, transform .45s ease;
+    }
+    .hidden{ opacity:0; pointer-events:none; transform: scale(1.02); }
+    .gone{ display:none !important; }
+
+    /* 1) ROTATE GATE (efecto tik tok) */
+    #rotateGate{
+      background:#000;
+      color:#fff;
+      letter-spacing:.5px;
+    }
+    .gateWrap{
+      display:flex;
+      align-items:center;
+      gap:18px;
+      opacity:.95;
+      transform-origin:center;
+      animation: gateFlip 1.35s ease-in-out infinite;
+    }
+    @keyframes gateFlip{
+      0%   { transform: rotate(0deg); opacity:.85; }
+      35%  { transform: rotate(0deg); opacity:1; }
+      65%  { transform: rotate(90deg); opacity:1; }
+      100% { transform: rotate(90deg); opacity:.85; }
+    }
+    .phoneIcon{
+      width:74px; height:128px;
+      border:3px solid #fff;
+      border-radius:14px;
+      position:relative;
+    }
+    .phoneIcon:before{
+      content:"";
+      position:absolute; top:8px; left:50%;
+      width:32px; height:6px;
+      border-radius:6px;
+      transform:translateX(-50%);
+      background:#fff;
+      opacity:.85;
+    }
+    .gateText{
+      font-weight:800;
+      text-transform:uppercase;
+      line-height:1.05;
+    }
+    .gateText .small{ font-weight:600; opacity:.85; font-size:14px; }
+    .gateText .big{ font-size:34px; }
+
+    /* 2) START HEART */
+    #startHeart{
+      background: var(--bg);
+      color: var(--accent);
+    }
+    .startRow{
+      display:flex;
+      align-items:center;
+      gap:22px;
+      transform: translateY(-4px);
+    }
+    .heartBtn{
+      border:0;
+      background:transparent;
+      cursor:pointer;
+      padding:0;
+      display:grid;
+      place-items:center;
+      transform-origin:center;
+      animation:pulse 1.1s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%,100%{ transform: scale(1); }
+      50%{ transform: scale(1.08); }
+    }
+    .heartSvg{ width:88px; height:88px; filter: drop-shadow(0 10px 18px rgba(0,0,0,.12)); }
+    .startText h1{
+      margin:0;
+      font-size:44px;
+      line-height:1.05;
+      font-weight:900;
+      color: var(--accent);
+    }
+    .startText p{
+      margin:10px 0 0;
+      font-size:20px;
+      font-weight:700;
+      color: rgba(197,58,74,.9);
+    }
+    .startText .line{
+      margin-top:10px;
+      height:4px;
+      width:260px;
+      background: rgba(197,58,74,.7);
+      border-radius:999px;
+    }
+
+    /* 3) MAIN SCENE */
+    #main{
+      background: radial-gradient(circle at 65% 40%, rgba(255,255,255,.55), transparent 55%), var(--bg);
+      display:block;
+      padding:0;
+    }
+    #canvas{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+    }
+    #letter{
+      position:absolute;
+      left: calc(var(--safeL) + 28px);
+      top: 50%;
+      transform: translateY(-50%);
+      width: min(48vw, 620px);
+      color: var(--ink);
+      font-weight:700;
+      font-size: clamp(18px, 2.2vw, 28px);
+      line-height:1.35;
+      white-space:pre-wrap;
+    }
+    #letter .cursor{
+      display:inline-block;
+      width:10px;
+      opacity:.8;
+      animation: blink .8s steps(1) infinite;
+    }
+    @keyframes blink{ 50%{ opacity:0; } }
+
+    /* mobile: si está muy angosto, que el texto baje un poco y no choque */
+    @media (max-width: 820px){
+      #letter{ width: 56vw; }
+      .startText h1{ font-size:36px; }
+    }
+    @media (max-width: 520px){
+      #letter{
+        top: 44%;
+        width: 62vw;
+        font-size: 16px;
+      }
+      .startRow{ gap:14px; }
+      .heartSvg{ width:74px; height:74px; }
+      .startText h1{ font-size:32px; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 1) Pantalla “gira teléfono” (solo efecto, no obliga a girar) -->
+  <section id="rotateGate" class="screen">
+    <div class="gateWrap" aria-hidden="true">
+      <div class="phoneIcon"></div>
+      <div class="gateText">
+        <div class="small">Пожалуйста</div>
+        <div class="big">ПОВЕРНИ</div>
+        <div class="big">ТЕЛЕФОН</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2) Corazón inicial (click) -->
+  <section id="startHeart" class="screen hidden">
+    <div class="startRow">
+      <button class="heartBtn" id="startBtn" aria-label="Нажми на сердечко">
+        <svg class="heartSvg" viewBox="0 0 64 64" role="img" aria-hidden="true">
+          <path fill="#d0243b" d="M32 56s-20-12.7-27.2-25.5C-1.8 18.1 6.2 6 18.6 8.4c5.2 1 9 5.1 10.6 8.4 1.6-3.3 5.4-7.4 10.6-8.4C52.2 6 60.2 18.1 59.2 30.5 52 43.3 32 56 32 56z"/>
+          <path fill="rgba(255,255,255,.35)" d="M22 15c-5.8-1.1-11 4.5-9.8 11.5.5 3.2 2.6 6.6 5.9 10.2 1.1 1.2 3 .1 2.5-1.4-1.4-4.1-1.8-7.6-1.1-10.4.9-3.5 2.9-5.5 4.9-6.6 1.4-.8.9-3-1.4-3.3z"/>
+        </svg>
+      </button>
+
+      <div class="startText">
+        <h1>С Днём<br>святого<br>Валентина!</h1>
+        <div class="line"></div>
+        <p>Нажми на сердечко</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3) Escena principal -->
+  <section id="main" class="screen hidden">
+    <canvas id="canvas"></canvas>
+    <div id="letter"><span id="typed"></span><span class="cursor">|</span></div>
+  </section>
+
+<script>
+(() => {
+  const gate = document.getElementById('rotateGate');
+  const start = document.getElementById('startHeart');
+  const main = document.getElementById('main');
+  const startBtn = document.getElementById('startBtn');
+
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  const typedEl = document.getElementById('typed');
+
+  // ====== CONFIG (ajusta aquí si quieres) ======
+  const MESSAGE_RU =
+`Иногда мне кажется, что мир становится теплее, когда я думаю о тебе.
+Ты умеешь делать обычный день особенным — просто своим присутствием.
+
+Я хочу беречь тебя, поддерживать и радовать, даже на расстоянии.
+Я ценю каждую нашу минуту и очень скучаю по тебе.
+
+Я люблю тебя.`;
+
+  // Colores de “hojas-corazón”
+  const leafColors = ["#ff4d6d","#ff6b8a","#ff2f63","#ff8fb1","#ff5c7a","#ff3e6c"];
+
+  // ====== Helpers ======
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+  const lerp = (a,b,t)=>a+(b-a)*t;
+
+  // ====== Resize ======
+  let W=0,H=0, DPR=1;
+  function resize(){
+    DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    W = Math.floor(window.innerWidth);
+    H = Math.floor(window.innerHeight);
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener('resize', resize);
+
+  // ====== Flow: gate -> start ======
+  resize();
+
+  // Gate solo “se muestra” unos segundos y desaparece (NO obliga a girar)
+  setTimeout(() => {
+    gate.classList.add('hidden');
+    setTimeout(() => {
+      gate.classList.add('gone');
+      start.classList.remove('hidden');
+    }, 480);
+  }, 1800);
+
+  // ====== Main animation state ======
+  let running = false;
+  let t0 = 0;
+
+  // Timeline (ms)
+  const T_BRANCH = 2200;     // tronco+ramas
+  const T_LEAVES = 1500;     // hojas aparecen
+  const T_TYPE_DELAY = 500;  // espera antes de escribir
+  const WIND_SPAWN_EVERY = 80;
+
+  // Tree layout (right side)
+  function treeLayout(){
+    const minSide = Math.min(W,H);
+    const scale = minSide / 520;                 // escala base
+    const x = W * 0.73;                          // más a la derecha
+    const baseY = H * 0.82;
+    return { x, baseY, scale };
+  }
+
+  // Branch definition (simple stylized)
+  function branchPaths(layout){
+    const {x, baseY, scale} = layout;
+    const trunkTopY = baseY - 250*scale;
+
+    // Each branch is [x0,y0, c1x,c1y, c2x,c2y, x1,y1]
+    const b = [];
+    // left big
+    b.push([x, trunkTopY, x-40*scale, trunkTopY-40*scale, x-140*scale, trunkTopY-80*scale, x-190*scale, trunkTopY-140*scale]);
+    // right big
+    b.push([x, trunkTopY, x+40*scale, trunkTopY-40*scale, x+140*scale, trunkTopY-80*scale, x+190*scale, trunkTopY-140*scale]);
+    // left mid
+    b.push([x-10*scale, trunkTopY-25*scale, x-50*scale, trunkTopY-65*scale, x-110*scale, trunkTopY-85*scale, x-130*scale, trunkTopY-120*scale]);
+    // right mid
+    b.push([x+10*scale, trunkTopY-25*scale, x+50*scale, trunkTopY-65*scale, x+110*scale, trunkTopY-85*scale, x+130*scale, trunkTopY-120*scale]);
+    return { trunkTopY, branches: b };
+  }
+
+  // Heart canopy points (fills heart shape, keeps trunk visible)
+  let leafPts = [];
+  function buildLeafPoints(layout){
+    const {x, baseY, scale} = layout;
+    const cx = x;                          // heart center x
+    const cy = baseY - 250*scale;          // heart center y
+    const size = 175*scale;
+
+    leafPts = [];
+    // Sample heart equation and fill with jitter
+    for(let i=0;i<1400;i++){
+      const u = (Math.random()*2 - 1) * 1.2;
+      const v = (Math.random()*2 - 1) * 1.2;
+
+      // implicit heart: (x^2+y^2-1)^3 - x^2*y^3 <= 0 (classic)
+      const X = u;
+      const Y = v;
+      const inside = Math.pow(X*X + Y*Y - 1, 3) - (X*X)*Math.pow(Y,3);
+      if(inside <= 0){
+        // map
+        let px = cx + X * size;
+        let py = cy + (-Y) * size;
+
+        // Keep trunk zone clean (no leaves on trunk)
+        const trunkZoneW = 34*scale;
+        const trunkZoneH = 140*scale;
+        const trunkX = x;
+        const trunkY = baseY - 130*scale;
+        if(Math.abs(px - trunkX) < trunkZoneW && (py > trunkY - trunkZoneH && py < baseY + 20*scale)){
+          continue;
+        }
+
+        // Slight shape tweak: move a bit upward to look like a crown
+        py -= 16*scale;
+
+        leafPts.push({x:px, y:py, r:(6 + Math.random()*8)*scale, c: leafColors[(Math.random()*leafColors.length)|0]});
+      }
+    }
+    // Ensure plenty of leaves
+    leafPts = leafPts.slice(0, 900);
+  }
+
+  // Falling hearts (wind)
+  const windHearts = [];
+  let lastSpawn = 0;
+
+  function spawnWindHearts(layout, count=2){
+    const {x, baseY, scale} = layout;
+    const cx = x;
+    const cy = baseY - 270*scale;
+    const spread = 160*scale;
+
+    for(let i=0;i<count;i++){
+      const px = cx + (Math.random()*2-1)*spread;
+      const py = cy + (Math.random()*2-1)*spread*0.6;
+
+      windHearts.push({
+        x:px,
+        y:py,
+        vx:(Math.random()*2-1)*0.35*scale,
+        vy:(1.2 + Math.random()*1.2)*scale,
+        rot:(Math.random()*Math.PI*2),
+        vr:(Math.random()*2-1)*0.02,
+        size:(10 + Math.random()*10)*scale,
+        c: leafColors[(Math.random()*leafColors.length)|0],
+        a: 1
+      });
+    }
+    // cap
+    if(windHearts.length > 220) windHearts.splice(0, windHearts.length-220);
+  }
+
+  function drawHeart(x,y,s,rot,color,alpha=1){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(rot);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+
+    // simple heart path
+    ctx.beginPath();
+    const k = s/18;
+    ctx.moveTo(0, 6*k);
+    ctx.bezierCurveTo(0, 0, -10*k, -2*k, -10*k, -10*k);
+    ctx.bezierCurveTo(-10*k, -18*k, 0, -18*k, 0, -8*k);
+    ctx.bezierCurveTo(0, -18*k, 10*k, -18*k, 10*k, -10*k);
+    ctx.bezierCurveTo(10*k, -2*k, 0, 0, 0, 6*k);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Draw tree parts
+  function drawBranches(layout, p){
+    const {x, baseY, scale} = layout;
+    const {trunkTopY, branches} = branchPaths(layout);
+
+    // base fade/appear
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    // branches
+    const brAlpha = clamp((p - 0.15)/0.85, 0, 1);
+    ctx.strokeStyle = `rgba(48,34,34,${0.95*brAlpha})`;
+    ctx.lineWidth = 10*scale;
+
+    branches.forEach((B, idx) => {
+      const t = clamp((p - 0.10 - idx*0.06)/0.90, 0, 1);
+      // draw partial bezier by sampling
+      ctx.beginPath();
+      const steps = 36;
+      for(let i=0;i<=steps;i++){
+        const u = (i/steps)*t;
+        const pt = cubicBezier(B, u);
+        if(i===0) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
+      }
+      ctx.stroke();
+    });
+
+    // trunk (we draw later, but for growth we compute)
+  }
+
+  function drawLeaves(layout, p){
+    const alpha = clamp(p, 0, 1);
+    const count = Math.floor(leafPts.length * alpha);
+    for(let i=0;i<count;i++){
+      const L = leafPts[i];
+      // little pop-in
+      const a = clamp((alpha - i/leafPts.length)*1.6, 0, 1);
+      drawHeart(L.x, L.y, L.r*1.9, (i%17)*0.02, L.c, a);
+    }
+  }
+
+  function drawTrunk(layout, p){
+    const {x, baseY, scale} = layout;
+    const trunkH = 290*scale;
+    const trunkW = 26*scale;
+    const grow = clamp(p, 0, 1);
+
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "#2f1f1f";
+
+    // trunk body
+    const h = trunkH * grow;
+    const yTop = baseY - h;
+
+    roundRect(ctx, x - trunkW/2, yTop, trunkW, h, 12*scale);
+    ctx.fill();
+
+    // base feet
+    const footY = baseY - 8*scale;
+    ctx.strokeStyle = "#2f1f1f";
+    ctx.lineWidth = 10*scale;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x - 34*scale, footY);
+    ctx.quadraticCurveTo(x - 10*scale, baseY + 14*scale, x, baseY + 2*scale);
+    ctx.quadraticCurveTo(x + 10*scale, baseY + 14*scale, x + 34*scale, footY);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function cubicBezier(B, t){
+    const [x0,y0,c1x,c1y,c2x,c2y,x1,y1] = B;
+    const u = 1-t;
+    const tt = t*t, uu = u*u;
+    const uuu = uu*u, ttt = tt*t;
+    const x = uuu*x0 + 3*uu*t*c1x + 3*u*tt*c2x + ttt*x1;
+    const y = uuu*y0 + 3*uu*t*c1y + 3*u*tt*c2y + ttt*y1;
+    return {x,y};
+  }
+
+  function roundRect(ctx, x,y,w,h,r){
+    r = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+  }
+
+  // ====== Typing word-by-word ======
+  let typingStarted = false;
+  function startTyping(){
+    if(typingStarted) return;
+    typingStarted = true;
+
+    typedEl.textContent = "";
+    const words = MESSAGE_RU.split(/\s+/);
+    let i = 0;
+
+    const timer = setInterval(() => {
+      typedEl.textContent += (i===0 ? "" : " ") + words[i];
+      i++;
+      if(i >= words.length) clearInterval(timer);
+    }, 120);
+  }
+
+  // ====== Main loop ======
+  function loop(now){
+    if(!running) return;
+
+    const elapsed = now - t0;
+    const layout = treeLayout();
+
+    // background clear
+    ctx.clearRect(0,0,W,H);
+
+    // timeline progress
+    const pBranch = clamp(elapsed / T_BRANCH, 0, 1);
+    const pLeaves = clamp((elapsed - T_BRANCH) / T_LEAVES, 0, 1);
+
+    // draw order:
+    drawBranches(layout, pBranch);     // 1) ramas
+    if(pLeaves > 0) drawLeaves(layout, pLeaves); // 2) hojas/corazones (tapan ramas)
+    drawTrunk(layout, pBranch);        // 3) tronco al final (NO lo tapan)
+
+    // wind hearts start after leaves show enough
+    if(pLeaves > 0.25){
+      if(now - lastSpawn > WIND_SPAWN_EVERY){
+        lastSpawn = now;
+        spawnWindHearts(layout, 2);
+      }
+    }
+
+    // update/draw wind hearts
+    for(let i=windHearts.length-1;i>=0;i--){
+      const h = windHearts[i];
+      h.x += h.vx + Math.sin((now/300)+i)*0.25;
+      h.y += h.vy;
+      h.rot += h.vr;
+      h.a -= 0.004;
+      drawHeart(h.x, h.y, h.size, h.rot, h.c, clamp(h.a,0,1));
+      if(h.a <= 0 || h.y > H + 40) windHearts.splice(i,1);
+    }
+
+    // start typing after leaves finish
+    if(elapsed > (T_BRANCH + T_LEAVES + T_TYPE_DELAY)){
+      startTyping();
+    }
+
+    requestAnimationFrame(loop);
+  }
+
+  // ====== Start button -> main ======
+  startBtn.addEventListener('click', () => {
+    start.classList.add('hidden');
+    setTimeout(() => {
+      start.classList.add('gone');
+      main.classList.remove('hidden');
+
+      // reset
+      typingStarted = false;
+      typedEl.textContent = "";
+      windHearts.length = 0;
+      lastSpawn = 0;
+
+      resize();
+      buildLeafPoints(treeLayout());
+
+      running = true;
+      t0 = performance.now();
+      requestAnimationFrame(loop);
+    }, 420);
+  });
+
+})();
+</script>
+</body>
+</html>
