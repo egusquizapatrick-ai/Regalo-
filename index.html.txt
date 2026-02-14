@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Для тебя</title>
+  <style>
+    :root{
+      --stage-w: 1200px;
+      --stage-h: 675px; /* 16:9 */
+      --scale: 1;
+
+      --bg: #efe2dd;
+      --text: rgba(0,0,0,.62);
+      --accent: #c7263a;
+      --shadow: rgba(0,0,0,.18);
+    }
+    *{ box-sizing:border-box; }
+    html, body{ height:100%; margin:0; }
+    body{
+      background:#000; /* barras negras alrededor */
+      overflow:hidden;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    /* === ESCENARIO fijo horizontal (NO rota, solo escala) === */
+    #stage{
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      width: var(--stage-w);
+      height: var(--stage-h);
+      transform: translate(-50%, -50%) scale(var(--scale));
+      transform-origin: center center;
+      overflow:hidden;
+      background: var(--bg);
+    }
+
+    .screen{ position:absolute; inset:0; display:none; }
+    .screen.active{ display:block; }
+
+    .fadeIn{ animation: fadeIn .35s ease both; }
+    .fadeOut{ animation: fadeOut .28s ease both; }
+    @keyframes fadeIn{ from{opacity:0} to{opacity:1} }
+    @keyframes fadeOut{ from{opacity:1} to{opacity:0} }
+
+    /* ===== PANTALLA 1: NEGRO (4s) ===== */
+    #rotateOverlay{
+      background:#000;
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 70px 90px;
+    }
+    .rotateWrap{
+      display:flex;
+      align-items:center;
+      gap: 60px;
+      width: 100%;
+      max-width: 980px;
+    }
+    .phoneIcon{
+      width: 110px;
+      height: 220px;
+      border: 4px solid #fff;
+      border-radius: 26px;
+      position:relative;
+      opacity:.95;
+      transform: rotate(-18deg);
+      animation: phoneWiggle 1.2s ease-in-out infinite;
+    }
+    .phoneIcon:before{
+      content:"";
+      position:absolute;
+      top:12px; left:50%;
+      width:55%;
+      height:6px;
+      transform:translateX(-50%);
+      background:#fff;
+      border-radius:999px;
+      opacity:.85;
+    }
+    @keyframes phoneWiggle{
+      0%,100%{ transform: rotate(-18deg) translateY(0); }
+      50%{ transform: rotate(-8deg) translateY(2px); }
+    }
+    .rotateText h1{
+      margin:0;
+      font-size: 44px;
+      letter-spacing:.5px;
+      line-height:1.05;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+    .rotateText p{
+      margin:12px 0 0;
+      font-size: 20px;
+      opacity:.92;
+      font-weight: 600;
+    }
+
+    /* ===== PANTALLA 2: CORAZÓN (clic) ===== */
+    #heartScreen{
+      background: var(--bg);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 50px 90px;
+    }
+    .heartLayout{
+      width:100%;
+      max-width: 980px;
+      display:flex;
+      align-items:center;
+      gap: 70px;
+    }
+    .bigHeartBtn{
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      padding:0;
+      filter: drop-shadow(0 10px 18px var(--shadow));
+      transition: transform .15s ease;
+    }
+    .bigHeartBtn:active{ transform: scale(.98); }
+    .heartSvg{
+      width: 150px;
+      height: auto;
+    }
+    .heartMsg .title{
+      margin:0;
+      font-size: 54px;
+      font-weight: 900;
+      color: var(--accent);
+      line-height:1.02;
+    }
+    .heartMsg .sub{
+      margin: 14px 0 0;
+      font-size: 22px;
+      color: rgba(0,0,0,.55);
+      font-weight: 700;
+    }
+
+    /* ===== PANTALLA 3: TEXTO IZQ / ÁRBOL DER (HORIZONTAL) ===== */
+    #treeScreen{
+      background: var(--bg);
+      padding: 34px 40px;
+    }
+    .treeLayout{
+      width:100%;
+      height:100%;
+      display:flex;
+      gap: 26px;
+      align-items:stretch;
+    }
+    .textPanel{
+      flex: 0 0 48%;
+      padding: 10px 8px;
+      overflow:hidden;
+    }
+    .typedBox{
+      width:100%;
+      font-size: 18px;          /* más pequeño para que entre completo */
+      line-height: 1.38;
+      font-weight: 650;
+      color: var(--text);       /* más “fino” que negro puro */
+      white-space: pre-wrap;
+    }
+    .canvasPanel{
+      flex: 1 1 auto;
+      position:relative;
+      overflow:hidden;
+    }
+    canvas{ width:100%; height:100%; display:block; }
+
+    .noSelect{ user-select:none; -webkit-user-select:none; }
+  </style>
+</head>
+
+<body>
+  <div id="stage" class="noSelect">
+
+    <!-- 1) Inicio negro -->
+    <section id="rotateOverlay" class="screen active">
+      <div class="rotateWrap">
+        <div class="phoneIcon" aria-hidden="true"></div>
+        <div class="rotateText">
+          <h1>Пожалуйста, поверни телефон</h1>
+          <p>Сейчас начнётся сюрприз ✨</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2) Corazón -->
+    <section id="heartScreen" class="screen">
+      <div class="heartLayout">
+        <button id="heartBtn" class="bigHeartBtn" aria-label="Нажми на сердечко">
+          <!-- corazón SVG (NO se deforma) -->
+          <svg class="heartSvg" viewBox="0 0 512 512" aria-hidden="true">
+            <path fill="#c7263a" d="M256 469s-9-6-20-14C120 380 48 309 48 214c0-61 45-110 105-110 41 0 77 20 103 55 26-35 62-55 103-55 60 0 105 49 105 110 0 95-72 166-188 241-11 8-20 14-20 14z"/>
+            <path fill="rgba(255,255,255,.22)" d="M192 152c-22 0-49 15-61 41-5 12 12 18 18 6 10-20 31-31 43-31 10 0 12-16 0-16z"/>
+          </svg>
+        </button>
+
+        <div class="heartMsg">
+          <h2 class="title">С Днём святого Валентина!</h2>
+          <div class="sub">Нажми на сердечко 💞</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3) Árbol + texto -->
+    <section id="treeScreen" class="screen">
+      <div class="treeLayout">
+        <div class="textPanel">
+          <div id="typedText" class="typedBox"></div>
+        </div>
+        <div class="canvasPanel">
+          <canvas id="scene"></canvas>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    /* ========= 0) Ajuste “siempre horizontal” (escenario 16:9 escalado) ========= */
+    function fitStage(){
+      const sw = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stage-w')) || 1200;
+      const sh = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stage-h')) || 675;
+      const scale = Math.min(window.innerWidth / sw, window.innerHeight / sh);
+      document.documentElement.style.setProperty('--scale', scale.toFixed(4));
+    }
+    window.addEventListener('resize', fitStage);
+    fitStage();
+
+    /* ========= 1) Screens ========= */
+    const rotateOverlay = document.getElementById("rotateOverlay");
+    const heartScreen  = document.getElementById("heartScreen");
+    const treeScreen   = document.getElementById("treeScreen");
+    const heartBtn     = document.getElementById("heartBtn");
+
+    function show(el){
+      el.classList.add("active","fadeIn");
+      el.classList.remove("fadeOut");
+      setTimeout(()=>el.classList.remove("fadeIn"), 400);
+    }
+    function hide(el){
+      el.classList.add("fadeOut");
+      el.classList.remove("fadeIn");
+      setTimeout(()=>{ el.classList.remove("active","fadeOut"); }, 300);
+    }
+
+    // 4 segundos SIEMPRE (inicio negro)
+    setTimeout(()=>{
+      hide(rotateOverlay);
+      show(heartScreen);
+    }, 4000);
+
+    heartBtn.addEventListener("click", ()=>{
+      hide(heartScreen);
+      show(treeScreen);
+      startTreeScene();
+    }, { once:true });
+
+    /* ========= 2) Texto palabra por palabra ========= */
+    const typedEl = document.getElementById("typedText");
+    const message = [
+      "Иногда мне кажется, что мир становится теплее, когда я думаю о тебе.",
+      "Ты умеешь делать обычный день особенным — просто своим присутствием.",
+      "",
+      "Мне хочется беречь тебя, поддерживать и радовать, даже на расстоянии.",
+      "Я ценю каждую нашу минуту, каждое слово и каждую улыбку.",
+      "",
+      "Я очень скучаю… и правда, очень тебя люблю."
+    ].join("\n");
+
+    function typeByWords(text, msPerWord=85){
+      typedEl.textContent = "";
+      const tokens = text.split(/(\s+|\n)/);
+      let i = 0;
+      (function step(){
+        if(i >= tokens.length) return;
+        typedEl.textContent += tokens[i++];
+        const last = tokens[i-1];
+        setTimeout(step, last === "\n" ? 300 : msPerWord);
+      })();
+    }
+
+    /* ========= 3) Canvas árbol con MUCHAS hojas + viento ========= */
+    const canvas = document.getElementById("scene");
+    const ctx = canvas.getContext("2d");
+
+    let W=0, H=0, dpr=1;
+    function resizeCanvas(){
+      const rect = canvas.getBoundingClientRect();
+      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      W = Math.max(1, Math.floor(rect.width * dpr));
+      H = Math.max(1, Math.floor(rect.height * dpr));
+      canvas.width = W;
+      canvas.height = H;
+    }
+
+    // fórmula de corazón (para forma de copa)
+    function heartPoint(t){
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y = 13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t);
+      return {x, y};
+    }
+
+    function drawMiniHeart(x,y,size,rot,fill){
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(rot);
+      ctx.scale(size, size);
+      ctx.beginPath();
+      ctx.moveTo(0, 0.35);
+      ctx.bezierCurveTo(0, 0.1, -0.45, 0.05, -0.45, -0.25);
+      ctx.bezierCurveTo(-0.45, -0.55, -0.05, -0.65, 0, -0.35);
+      ctx.bezierCurveTo(0.05, -0.65, 0.45, -0.55, 0.45, -0.25);
+      ctx.bezierCurveTo(0.45, 0.05, 0, 0.1, 0, 0.35);
+      ctx.closePath();
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // hojas fijas y hojas que caen
+    let leaves = [];
+    const falling = [];
+
+    function buildLeaves(){
+      leaves = [];
+      // MÁS hojas (antes se te quedaba “sin hojas”)
+      const COUNT = 1300;
+
+      // árbol “a la derecha” dentro del panel
+      const cx = W * 0.56;
+      const cy = H * 0.44;
+
+      // escala de la forma corazón
+      const scale = Math.min(W,H) * 0.016;
+
+      const baseVisible = H * 0.86;   // base del tronco visible
+      const noCoverBelow = H * 0.79;  // NO tapar la base, pero sí tapar el resto
+
+      const palette = [
+        (a)=>`rgba(255, 64, 104, ${a})`,
+        (a)=>`rgba(214, 30, 72, ${a})`,
+        (a)=>`rgba(255, 120, 160, ${a})`,
+        (a)=>`rgba(255, 170, 190, ${a})`,
+      ];
+
+      let tries = 0;
+      while(leaves.length < COUNT && tries < COUNT*6){
+        tries++;
+        const t = Math.random()*Math.PI*2;
+        const p = heartPoint(t);
+        const r = Math.pow(Math.random(), 0.60); // más al borde => mejor forma corazón
+
+        let x = cx + (p.x * scale) * r + (Math.random()-0.5) * 10*dpr;
+        let y = cy - (p.y * scale) * r + (Math.random()-0.5) * 10*dpr;
+
+        // no tapar la base del tronco
+        if(y > noCoverBelow) continue;
+        if(y < H*0.08) continue;
+
+        const s = (Math.random()*3.6 + 2.5) * dpr;
+        const rot = (Math.random()-0.5) * 0.8;
+        const a = 0.22 + Math.random()*0.42;
+        const fill = palette[Math.floor(Math.random()*palette.length)](a);
+
+        leaves.push({x,y,s,rot,fill});
+      }
+    }
+
+    function spawnFalling(){
+      if(!leaves.length) return;
+      const pick = leaves[(Math.random()*leaves.length)|0];
+      falling.push({
+        x: pick.x + (Math.random()-0.5)*12*dpr,
+        y: pick.y + (Math.random()-0.5)*12*dpr,
+        vx: (Math.random()*0.7 + 0.2) * dpr,
+        vy: (Math.random()*1.25 + 0.85) * dpr,
+        rot: Math.random()*Math.PI*2,
+        vr: (Math.random()*0.03 - 0.015),
+        s: (Math.random()*3.6 + 2.2) * dpr,
+        a: Math.random()*0.55 + 0.25
+      });
+      if(falling.length > 260) falling.shift();
+    }
+
+    function updateFalling(){
+      // viento suave
+      const wind = (Math.sin((performance.now()-t0)/850) * 0.4 + 0.6) * dpr;
+
+      // spawner continuo
+      for(let k=0;k<3;k++){
+        if(Math.random() < 0.7) spawnFalling();
+      }
+
+      for(const p of falling){
+        p.x += (p.vx + wind);
+        p.y += p.vy;
+        p.rot += p.vr;
+      }
+      for(let i=falling.length-1;i>=0;i--){
+        if(falling[i].y > H + 60*dpr || falling[i].x > W + 60*dpr) falling.splice(i,1);
+      }
+    }
+
+    function drawFalling(){
+      for(const p of falling){
+        drawMiniHeart(p.x, p.y, p.s/10, p.rot, `rgba(255, 80, 120, ${p.a})`);
+      }
+    }
+
+    function clearBg(){
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle = "#efe2dd";
+      ctx.fillRect(0,0,W,H);
+    }
+
+    function drawTrunkAndBranches(progress){
+      const trunkBottomY = H*0.88;
+      const trunkTopY    = H*0.58;
+      const trunkX       = W*0.56;
+
+      const wBottom = W*0.070;  // más ancho abajo
+      const wTop    = W*0.040;
+
+      const y = trunkBottomY - (trunkBottomY - trunkTopY) * progress;
+
+      // tronco
+      ctx.save();
+      ctx.fillStyle = "#2b2524";
+      ctx.beginPath();
+      ctx.moveTo(trunkX - wBottom/2, trunkBottomY);
+      ctx.lineTo(trunkX + wBottom/2, trunkBottomY);
+      ctx.lineTo(trunkX + wTop/2, y);
+      ctx.lineTo(trunkX - wTop/2, y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // ramas
+      const bx = trunkX;
+      const by = trunkTopY + (trunkTopY - y)*0.22;
+
+      ctx.save();
+      ctx.strokeStyle = "#2b2524";
+      ctx.lineCap = "round";
+      ctx.lineWidth = Math.max(6*dpr, W*0.010);
+      ctx.beginPath();
+
+      const r1x = bx + W*0.16, r1y = by - H*0.14;
+      const l1x = bx - W*0.16, l1y = by - H*0.14;
+
+      ctx.moveTo(bx, by);
+      ctx.lineTo(bx + (r1x-bx)*progress, by + (r1y-by)*progress);
+
+      ctx.moveTo(bx, by);
+      ctx.lineTo(bx + (l1x-bx)*progress, by + (l1y-by)*progress);
+
+      ctx.stroke();
+      ctx.restore();
+
+      // base visible (sí se ve)
+      ctx.save();
+      ctx.strokeStyle = "#2b2524";
+      ctx.lineWidth = Math.max(7*dpr, W*0.012);
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(trunkX - W*0.065, trunkBottomY);
+      ctx.quadraticCurveTo(trunkX, trunkBottomY + H*0.03, trunkX + W*0.065, trunkBottomY);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawLeaves(progress){
+      const n = Math.floor(leaves.length * progress);
+      for(let i=0;i<n;i++){
+        const L = leaves[i];
+        drawMiniHeart(L.x, L.y, L.s/10, L.rot, L.fill);
+      }
+    }
+
+    let running=false;
+    let t0=0;
+
+    function tick(now){
+      if(!running) return;
+      const elapsed = now - t0;
+
+      const trunkDur = 1400;
+      const leafDur  = 1600;
+
+      clearBg();
+
+      // 1) tronco+ramas
+      const p1 = Math.min(1, elapsed / trunkDur);
+      drawTrunkAndBranches(p1);
+
+      // 2) hojas (MUCHAS) tapan ramas y casi todo el tronco (menos base)
+      const p2 = Math.max(0, Math.min(1, (elapsed - trunkDur) / leafDur));
+      drawLeaves(p2);
+
+      // 3) viento
+      if(p2 > 0.15){
+        updateFalling();
+        drawFalling();
+      }
+
+      // 4) texto palabra por palabra (cuando ya hay copa)
+      if(elapsed > trunkDur + 500 && !typedEl.dataset.started){
+        typedEl.dataset.started = "1";
+        typeByWords(message, 85);
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    function startTreeScene(){
+      typedEl.textContent = "";
+      typedEl.dataset.started = "";
+      falling.length = 0;
+
+      resizeCanvas();
+      buildLeaves();
+
+      t0 = performance.now();
+      running = true;
+      requestAnimationFrame(tick);
+    }
+
+    // rearmar canvas si cambia tamaño
+    window.addEventListener('resize', ()=>{
+      fitStage();
+      if(treeScreen.classList.contains('active')){
+        resizeCanvas();
+        buildLeaves();
+      }
+    });
+
+  </script>
+</body>
+</html>
