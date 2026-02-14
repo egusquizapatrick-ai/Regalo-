@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>❤️</title>
+  <style>
+    :root{
+      --bg:#efe0d8;
+      --ink:#2f2a2a;
+      --muted:rgba(47,42,42,.78);
+      --heart:#d91f2a;
+      --ground:#2a2626;
+
+      /* Layout (landscape look always) */
+      --safeL:max(16px, env(safe-area-inset-left));
+      --safeR:max(16px, env(safe-area-inset-right));
+      --safeT:max(12px, env(safe-area-inset-top));
+      --safeB:max(12px, env(safe-area-inset-bottom));
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      background: radial-gradient(closest-side, rgba(255,255,255,.35), rgba(255,255,255,0)) , var(--bg);
+      color:var(--ink);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow:hidden;
+    }
+
+    /* Force “horizontal composition” regardless of device rotation */
+    #stage{
+      position:fixed; inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    /* This keeps a landscape canvas inside the screen */
+    .frame{
+      width:min(100vw, 1100px);
+      height:min(100vh, 620px);
+      aspect-ratio: 16 / 9;
+      position:relative;
+      overflow:hidden;
+      border-radius: 18px;
+      background: radial-gradient(closest-side, rgba(255,255,255,.25), rgba(255,255,255,0)) , var(--bg);
+    }
+
+    /* Intro screen */
+    #screenIntro, #screenTree{
+      position:absolute; inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: calc(var(--safeT) + 14px) var(--safeR) calc(var(--safeB) + 14px) var(--safeL);
+    }
+    #screenTree{display:none}
+
+    .introWrap{
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 26px;
+    }
+    .introText{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      line-height:1.05;
+      user-select:none;
+    }
+    .introTitle{
+      font-weight:800;
+      font-size: clamp(26px, 4vw, 48px);
+      letter-spacing:-.02em;
+      color: #a0161e;
+    }
+    .introHint{
+      font-weight:700;
+      font-size: clamp(14px, 2vw, 20px);
+      color:#a0161e;
+      opacity:.95;
+      border-top: 3px solid #a0161e;
+      padding-top: 10px;
+      width: fit-content;
+    }
+
+    /* Heart only (no circle, no hand) */
+    .heartBtn{
+      width: clamp(70px, 10vw, 110px);
+      height: clamp(70px, 10vw, 110px);
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      user-select:none;
+      background: transparent;
+      border:none;
+      padding:0;
+      transform: translateY(-1px);
+      transition: transform .15s ease;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.18));
+      opacity:.35;
+      pointer-events:none; /* enabled after 4s */
+    }
+    .heartBtn.enabled{opacity:1; pointer-events:auto;}
+    .heartBtn:active{transform: scale(.96);}
+
+    .heartEmoji{
+      font-size: clamp(44px, 6vw, 70px);
+      line-height:1;
+    }
+
+    /* Tree screen layout */
+    .treeLayout{
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:stretch;
+      justify-content:space-between;
+      gap: 18px;
+      position:relative;
+    }
+
+    /* Left text block (no box) */
+    .textCol{
+      width: 52%;
+      padding-left: 10px;
+      padding-top: 18px;
+      padding-bottom: 18px;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-start;
+    }
+
+    .message{
+      font-weight: 650;              /* slightly thinner than before */
+      letter-spacing: -0.01em;
+      color: var(--muted);
+      font-size: clamp(16px, 2.15vw, 28px);
+      line-height: 1.18;
+      margin:0;
+      white-space:pre-wrap;
+    }
+    .caret{
+      display:inline-block;
+      width: 10px;
+      border-bottom: 3px solid rgba(47,42,42,.55);
+      transform: translateY(-2px);
+      animation: blink 1s steps(1) infinite;
+      margin-left:2px;
+    }
+    @keyframes blink{50%{opacity:0}}
+
+    /* Right tree area */
+    .treeCol{
+      width: 48%;
+      position:relative;
+      display:flex;
+      align-items:flex-end;
+      justify-content:flex-end;
+      padding-right: 22px;
+      padding-bottom: 16px;
+    }
+
+    canvas{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+    }
+
+    /* Ground line */
+    .ground{
+      position:absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 26px;
+      height: 3px;
+      background: rgba(0,0,0,.55);
+      border-radius: 6px;
+      opacity:.65;
+      pointer-events:none;
+    }
+
+    /* Small fade in */
+    .fadeIn{animation: fadeIn .55s ease both}
+    @keyframes fadeIn{from{opacity:0; transform: translateY(6px)} to{opacity:1; transform:none}}
+
+    /* Subtle “no visible square under tree”: add soft vignette only */
+    .treeVignette{
+      position:absolute; inset:-40px;
+      background: radial-gradient(closest-side, rgba(255,255,255,.0), rgba(0,0,0,.06));
+      pointer-events:none;
+    }
+
+    /* Mobile small screens: keep readable */
+    @media (max-width:520px){
+      .textCol{width:56%}
+      .treeCol{width:44%}
+      .message{font-size: 16px}
+    }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <div class="frame">
+      <!-- INTRO -->
+      <section id="screenIntro" aria-label="intro">
+        <div class="introWrap">
+          <button id="heartBtn" class="heartBtn" aria-label="Нажми на сердечко">
+            <div class="heartEmoji">❤️</div>
+          </button>
+          <div class="introText">
+            <div class="introTitle">С Днём святого Валентина!</div>
+            <div class="introHint">Нажми на сердечко</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TREE -->
+      <section id="screenTree" aria-label="tree">
+        <div class="treeLayout">
+          <div class="textCol">
+            <p id="msg" class="message"></p>
+          </div>
+
+          <div class="treeCol">
+            <div class="treeVignette"></div>
+            <div class="ground"></div>
+            <canvas id="c"></canvas>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    /* ============ SETTINGS ============ */
+    const INTRO_MS = 4000; // <-- 4 segundos
+    const TYPING_DELAY_MS = 1700; // empieza después de que “aparezca” el árbol
+    const TYPING_SPEED = 22; // ms por letra
+
+    // Texto en ruso (edítalo si quieres)
+    const FULL_TEXT =
+`Иногда мне кажется, что мир становится теплее, когда я думаю о тебе.
+Ты умеешь делать обычный день особенным — просто своим присутствием.
+Я хочу беречь тебя, поддерживать и радовать, даже на расстоянии.
+Я ценю каждую нашу минуту и очень скучаю по тебе.
+Я люблю тебя.`;
+
+    /* ============ INTRO LOGIC ============ */
+    const screenIntro = document.getElementById('screenIntro');
+    const screenTree  = document.getElementById('screenTree');
+    const heartBtn    = document.getElementById('heartBtn');
+
+    // Enable click after 4s, but heart is visible from start
+    setTimeout(()=> heartBtn.classList.add('enabled'), INTRO_MS);
+
+    heartBtn.addEventListener('click', ()=>{
+      if(!heartBtn.classList.contains('enabled')) return;
+      // switch screens
+      screenIntro.style.display = 'none';
+      screenTree.style.display = 'flex';
+      screenTree.classList.add('fadeIn');
+
+      // start tree animation + wind hearts
+      startTreeScene();
+
+      // typing after branches/leaves start
+      setTimeout(()=> startTyping(FULL_TEXT), TYPING_DELAY_MS);
+    });
+
+    /* ============ CANVAS ============ */
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+
+    let W=0,H=0, dpr=1;
+
+    function resize(){
+      const r = canvas.getBoundingClientRect();
+      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      W = Math.floor(r.width * dpr);
+      H = Math.floor(r.height * dpr);
+      canvas.width = W;
+      canvas.height = H;
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.scale(dpr, dpr);
+    }
+    window.addEventListener('resize', resize);
+
+    /* ============ TREE SHAPE (heart canopy) ============ */
+    // We draw:
+    // 1) trunk & branches "growing"
+    // 2) canopy hearts "appearing" in a heart silhouette (density ~95%)
+    // 3) wind hearts falling across the scene
+
+    // animation state
+    let t0 = 0;
+    let running = false;
+
+    // geometry (in CSS pixels)
+    let cw=0,ch=0;
+    function setCanvasMetrics(){
+      const r = canvas.getBoundingClientRect();
+      cw = r.width; ch = r.height;
+    }
+
+    // tree placement (move tree right)
+    function treeOrigin(){
+      // base on right side
+      return {
+        x: cw * 0.72,
+        y: ch * 0.83
+      };
+    }
+
+    // trunk params
+    function trunkTop(){
+      const o = treeOrigin();
+      return { x: o.x, y: ch*0.42 };
+    }
+
+    // heart canopy bounding box
+    function canopyBox(){
+      // smaller tree than before, up a bit
+      return {
+        cx: cw * 0.72,
+        cy: ch * 0.38,
+        w:  cw * 0.46,
+        h:  ch * 0.44
+      };
+    }
+
+    // hearts as “leaves”
+    const canopyHearts = [];
+    const windHearts = [];
+
+    function clearAll(){
+      canopyHearts.length = 0;
+      windHearts.length = 0;
+    }
+
+    function rand(a,b){ return a + Math.random()*(b-a); }
+
+    // heart silhouette function (normalized -1..1)
+    // returns true if point (x,y) inside heart
+    function inHeart(nx, ny){
+      // classic implicit heart curve: (x^2 + y^2 - 1)^3 - x^2*y^3 <= 0
+      const x = nx;
+      const y = ny;
+      const a = x*x + y*y - 1;
+      return (a*a*a - x*x*y*y*y) <= 0;
+    }
+
+    function buildCanopy(){
+      canopyHearts.length = 0;
+      const box = canopyBox();
+
+      // density target: 95% of a “full” look
+      const target = Math.floor(520 * 0.95); // tweakable
+
+      let tries = 0;
+      while(canopyHearts.length < target && tries < target*20){
+        tries++;
+        const px = rand(box.cx - box.w/2, box.cx + box.w/2);
+        const py = rand(box.cy - box.h/2, box.cy + box.h/2);
+
+        // map to [-1,1] heart space
+        const nx = (px - box.cx) / (box.w/2);
+        const ny = (py - box.cy) / (box.h/2);
+
+        if(!inHeart(nx, ny)) continue;
+
+        const s  = rand(6, 13);                  // heart size
+        const a  = rand(0.40, 0.95);             // alpha
+        const hue = rand(330, 360);              // pink/red
+        const sat = rand(55, 85);
+        const lum = rand(45, 62);
+        const rot = rand(-0.35, 0.35);
+
+        canopyHearts.push({
+          x:px, y:py, s, a,
+          color:`hsla(${hue},${sat}%,${lum}%,${a})`,
+          rot,
+          pop: rand(0.0, 1.0) // appearance timing
+        });
+      }
+    }
+
+    function spawnWindHearts(){
+      windHearts.length = 0;
+      const count = 80;
+      for(let i=0;i<count;i++){
+        windHearts.push(newWindHeart(true));
+      }
+    }
+
+    function newWindHeart(randomY=false){
+      // spawn from right side drifting left, like wind
+      return {
+        x: rand(cw*0.25, cw*1.15),
+        y: randomY ? rand(ch*0.15, ch*0.95) : -rand(10,120),
+        vx: -rand(10, 30),        // left drift
+        vy:  rand(18, 42),        // falling
+        wob: rand(0.8, 2.2),
+        ph:  rand(0, Math.PI*2),
+        s:   rand(7, 15),
+        a:   rand(0.25, 0.85),
+        color: `hsla(${rand(330,360)},${rand(50,85)}%,${rand(45,65)}%,${rand(0.25,0.85)})`
+      };
+    }
+
+    /* Drawing primitives */
+    function drawHeart(x,y,size,rot,color){
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(rot||0);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      const s = size;
+      // simple heart path
+      ctx.moveTo(0, s*0.35);
+      ctx.bezierCurveTo(s*0.55, -s*0.10,  s*0.90,  s*0.45, 0, s*0.95);
+      ctx.bezierCurveTo(-s*0.90, s*0.45, -s*0.55, -s*0.10, 0, s*0.35);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawTrunkAndBranches(grow){
+      // grow: 0..1
+      const o = treeOrigin();
+      const top = trunkTop();
+
+      // trunk: wider at bottom
+      const trunkBottomW = cw * 0.055;   // a bit wider
+      const trunkTopW    = cw * 0.030;
+
+      const trunkH = (o.y - top.y) * grow;
+
+      // trunk
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#2a2322';
+      ctx.beginPath();
+      ctx.lineWidth = trunkBottomW;
+      ctx.moveTo(o.x, o.y);
+      ctx.lineTo(o.x, o.y - trunkH);
+      ctx.stroke();
+
+      // taper overlay
+      ctx.strokeStyle = '#312827';
+      ctx.beginPath();
+      ctx.lineWidth = trunkTopW;
+      ctx.moveTo(o.x, o.y);
+      ctx.lineTo(o.x, o.y - trunkH);
+      ctx.stroke();
+
+      // branches (kept subtle; leaves cover them)
+      const bx = o.x;
+      const by = o.y - trunkH;
+
+      function branch(tox,toy,w){
+        ctx.beginPath();
+        ctx.lineWidth = w;
+        ctx.moveTo(bx, by);
+        ctx.lineTo(tox, toy);
+        ctx.stroke();
+      }
+
+      // branch targets (heart sides)
+      const box = canopyBox();
+      const left1  = {x: box.cx - box.w*0.25, y: box.cy + box.h*0.05};
+      const right1 = {x: box.cx + box.w*0.25, y: box.cy + box.h*0.05};
+      const left2  = {x: box.cx - box.w*0.18, y: box.cy - box.h*0.16};
+      const right2 = {x: box.cx + box.w*0.18, y: box.cy - box.h*0.16};
+
+      const g = Math.max(0, Math.min(1, (grow-0.25)/0.75));
+
+      branch( bx + (left1.x-bx)*g,  by + (left1.y-by)*g,  cw*0.014 );
+      branch( bx + (right1.x-bx)*g, by + (right1.y-by)*g, cw*0.014 );
+      branch( bx + (left2.x-bx)*g,  by + (left2.y-by)*g,  cw*0.010 );
+      branch( bx + (right2.x-bx)*g, by + (right2.y-by)*g, cw*0.010 );
+
+      ctx.restore();
+    }
+
+    /* Animation loop */
+    function tick(ts){
+      if(!running) return;
+      if(!t0) t0 = ts;
+      const t = (ts - t0) / 1000; // seconds
+
+      // clear
+      ctx.clearRect(0,0,cw,ch);
+
+      // subtle background haze
+      ctx.save();
+      ctx.globalAlpha = 0.10;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.ellipse(cw*0.55, ch*0.45, cw*0.55, ch*0.55, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+
+      // 1) trunk+branches growth (0..1 in ~1.2s)
+      const grow = Math.min(1, t/1.2);
+      drawTrunkAndBranches(grow);
+
+      // 2) canopy hearts pop in after branches (from 0..1)
+      const canopyProg = Math.max(0, Math.min(1, (t-0.7)/1.1));
+      for(const h of canopyHearts){
+        // each leaf has a pop time; show earlier/later
+        const local = Math.max(0, Math.min(1, (canopyProg - h.pop) / 0.25));
+        if(local <= 0) continue;
+        // slightly “inflate”
+        const s = h.s * (0.65 + 0.35*local);
+        drawHeart(h.x, h.y, s, h.rot, h.color);
+      }
+
+      // 3) wind hearts (continuous)
+      updateWind(1/60);
+      drawWind();
+
+      requestAnimationFrame(tick);
+    }
+
+    function updateWind(dt){
+      for(const p of windHearts){
+        p.ph += dt * p.wob;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.x += Math.sin(p.ph) * 10 * dt;
+
+        // respawn when off-screen
+        if(p.y > ch + 60 || p.x < -60){
+          const np = newWindHeart(false);
+          p.x = cw + rand(20,180);
+          p.y = -rand(20,120);
+          p.vx = np.vx; p.vy = np.vy; p.wob=np.wob; p.ph=np.ph; p.s=np.s; p.a=np.a; p.color=np.color;
+        }
+      }
+    }
+
+    function drawWind(){
+      ctx.save();
+      for(const p of windHearts){
+        ctx.globalAlpha = p.a;
+        drawHeart(p.x, p.y, p.s, Math.sin(p.ph)*0.4, p.color);
+      }
+      ctx.restore();
+    }
+
+    function startTreeScene(){
+      resize();
+      setCanvasMetrics();
+      clearAll();
+      buildCanopy();
+      spawnWindHearts();
+
+      t0 = 0;
+      running = true;
+      requestAnimationFrame(tick);
+    }
+
+    /* ============ TYPING ============ */
+    const msgEl = document.getElementById('msg');
+
+    function startTyping(text){
+      msgEl.textContent = '';
+      let i = 0;
+      const caret = document.createElement('span');
+      caret.className = 'caret';
+      msgEl.appendChild(caret);
+
+      function step(){
+        // remove caret, add char, re-add caret
+        caret.remove();
+        if(i < text.length){
+          msgEl.append(text[i]);
+          msgEl.appendChild(caret);
+          i++;
+          setTimeout(step, TYPING_SPEED);
+        }else{
+          // finish
+          caret.remove();
+        }
+      }
+      step();
+    }
+  </script>
+</body>
+</html>
