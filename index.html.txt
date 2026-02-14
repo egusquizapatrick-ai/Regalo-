@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>❤️</title>
+
+  <style>
+    :root{
+      --bg:#efe0d8;
+      --ink:#2b2b2b;
+      --muted:rgba(59,43,43,.72);
+      --accent:#b81b3a;
+      --heart:#d91f2a;
+      --wood:#6a3b1f;
+      --wood2:#4a2916;
+      --panelW:min(44vw,520px);
+      --safeL:max(16px, env(safe-area-inset-left));
+      --safeR:max(16px, env(safe-area-inset-right));
+      --safeT:max(14px, env(safe-area-inset-top));
+      --safeB:max(14px, env(safe-area-inset-bottom));
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      background:var(--bg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial;
+      color:var(--ink);
+      overflow:hidden;
+    }
+
+    /* ---------- overlay "rotate phone" (solo visual) ---------- */
+    #rotateOverlay{
+      position:fixed; inset:0;
+      display:grid; place-items:center;
+      background:rgba(0,0,0,.92);
+      z-index:100;
+      opacity:1;
+      transition:opacity .6s ease;
+    }
+    #rotateOverlay.hidden{opacity:0; pointer-events:none}
+    .rotBox{
+      text-align:center;
+      color:#fff;
+      padding:24px 18px;
+      width:min(520px,92vw);
+    }
+    .rotIcon{
+      width:90px;height:90px;
+      margin:0 auto 14px;
+      border:2px solid rgba(255,255,255,.75);
+      border-radius:18px;
+      position:relative;
+    }
+    .rotIcon:before{
+      content:"";
+      position:absolute;
+      width:52px;height:28px;
+      border:2px solid rgba(255,255,255,.75);
+      border-radius:10px;
+      left:50%; top:50%;
+      transform:translate(-50%,-50%) rotate(90deg);
+      opacity:.85;
+    }
+    .rotText1{
+      font-weight:900;
+      letter-spacing:.6px;
+      font-size:22px;
+      margin-top:6px;
+    }
+    .rotText2{
+      opacity:.75;
+      margin-top:8px;
+      font-size:14px;
+    }
+
+    /* ---------- pantalla corazón (inicio) ---------- */
+    #heartScreen{
+      position:fixed;
+      inset:0;
+      background:var(--bg);
+      display:grid;
+      place-items:center;
+      z-index:50;
+      opacity:1;
+      transition:opacity .5s ease;
+    }
+    #heartScreen.hidden{opacity:0; pointer-events:none}
+
+    .svCenter{
+      position:relative;
+      width:min(680px,92vw);
+      height:min(360px,70vh);
+      display:grid;
+      place-items:center;
+    }
+
+    .svHeart{
+      width:92px;height:92px;
+      border-radius:999px;
+      border:0;
+      background:#c81f3a;
+      color:#fff;
+      font-size:44px;
+      line-height:1;
+      cursor:pointer;
+      box-shadow:0 14px 30px rgba(0,0,0,.12);
+      transform:translateY(-6px);
+      transition:transform .15s ease;
+    }
+    .svHeart:active{transform:translateY(-2px) scale(.98)}
+
+    .svLabel{
+      position:absolute;
+      left:calc(50% + 55px);
+      top:50%;
+      transform:translateY(-50%);
+      display:grid;
+      gap:8px;
+      align-content:center;
+      width:min(320px,40vw);
+    }
+    .svText{
+      font-weight:900;
+      font-size:22px;
+      color:var(--accent);
+    }
+    .svLine{
+      height:3px;
+      width:170px;
+      background:var(--accent);
+      border-radius:999px;
+      opacity:.9;
+    }
+    .svHint{
+      font-weight:700;
+      font-size:13px;
+      color:rgba(184,27,58,.85);
+    }
+    .svHand{
+      position:absolute;
+      left:calc(50% - 22px);
+      top:calc(50% + 22px);
+      font-size:22px;
+      transform:rotate(-12deg);
+      opacity:.9;
+      animation:tap 1.2s infinite ease-in-out;
+      user-select:none;
+    }
+    @keyframes tap{
+      0%,100%{transform:translateY(0) rotate(-12deg)}
+      50%{transform:translateY(6px) rotate(-12deg)}
+    }
+
+    /* ---------- escena árbol ---------- */
+    #treeScreen{
+      position:fixed;
+      inset:0;
+      display:none;
+      padding:var(--safeT) var(--safeR) var(--safeB) var(--safeL);
+    }
+    #treeScreen.show{display:block}
+
+    .stage{
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:20px;
+      overflow:hidden;
+    }
+
+    /* texto SIN recuadro (a la izquierda) */
+    .letter{
+      width:var(--panelW);
+      max-width:520px;
+      padding:0;
+      margin:0;
+    }
+    .title{
+      font-weight:950;
+      font-size:26px;
+      margin:0 0 10px 0;
+      line-height:1.05;
+    }
+    .typed{
+      font-size:18px;
+      line-height:1.45;
+      color:var(--muted);
+      white-space:pre-wrap;
+      min-height:140px;
+    }
+
+    /* árbol más a la derecha */
+    .treeWrap{
+      flex:1;
+      display:flex;
+      justify-content:flex-end;
+      align-items:center;
+      padding-right:6vw; /* empuja a la derecha */
+    }
+    canvas{display:block; width:min(760px,54vw); height:min(520px,76vh);}
+
+    /* para pantallas muy angostas */
+    @media (max-width:820px){
+      .stage{gap:12px}
+      .letter{width:min(46vw,520px)}
+      canvas{width:min(640px,52vw); height:min(460px,68vh)}
+      .treeWrap{padding-right:2vw}
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Overlay “gira tu teléfono” (solo visual) -->
+  <div id="rotateOverlay">
+    <div class="rotBox">
+      <div class="rotIcon"></div>
+      <div class="rotText1">ПОЖАЛУЙСТА, ПОВЕРНИ ТЕЛЕФОН</div>
+      <div class="rotText2">Это только эффект — через секунду исчезнет ✨</div>
+    </div>
+  </div>
+
+  <!-- Pantalla del corazón -->
+  <div id="heartScreen" class="hidden">
+    <div class="svCenter">
+      <button id="heartBtn" class="svHeart" aria-label="heart">❤</button>
+
+      <div class="svLabel">
+        <div class="svText">С Днём святого Валентина!</div>
+        <div class="svLine"></div>
+        <div class="svHint">Нажми на сердечко</div>
+      </div>
+
+      <div class="svHand">☝️</div>
+    </div>
+  </div>
+
+  <!-- Escena árbol -->
+  <div id="treeScreen">
+    <div class="stage">
+      <div class="letter">
+        <h1 class="title">Для тебя, моя особенная:</h1>
+        <div id="typed" class="typed"></div>
+      </div>
+
+      <div class="treeWrap">
+        <canvas id="cv" width="900" height="650"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ========= Config ========= */
+    const MESSAGE_RU =
+`Иногда мне кажется, что мир становится теплее, когда я думаю о тебе.
+Ты умеешь делать обычный день особенным — просто своим присутствием.
+
+Мне хочется беречь тебя, поддерживать и радовать, даже на расстоянии.
+Я ценю каждую нашу минуту, каждое слово и каждую улыбку.
+
+Я очень скучаю… и правда очень тебя люблю.`;
+
+    const rotateOverlay = document.getElementById('rotateOverlay');
+    const heartScreen   = document.getElementById('heartScreen');
+    const treeScreen    = document.getElementById('treeScreen');
+    const heartBtn      = document.getElementById('heartBtn');
+    const typedEl       = document.getElementById('typed');
+
+    const cv = document.getElementById('cv');
+    const ctx = cv.getContext('2d');
+
+    /* ========= Helpers ========= */
+    const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+    function clear(){
+      ctx.clearRect(0,0,cv.width,cv.height);
+    }
+
+    function drawBackground(){
+      // fondo suave
+      const g = ctx.createLinearGradient(0,0,0,cv.height);
+      g.addColorStop(0, "#f3e5de");
+      g.addColorStop(1, "#efe0d8");
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,cv.width,cv.height);
+    }
+
+    /* ========= Tree drawing (tronco + ramas primero) ========= */
+    // puntos del árbol (simple y bonito, estilo “ramas”)
+    const baseX = 520;  // más a la derecha
+    const baseY = 585;
+
+    // cada rama: [x1,y1,x2,y2, grosor]
+    const branches = [
+      // tronco
+      [baseX, baseY, baseX, 250, 26],
+
+      // ramas principales
+      [baseX, 320, baseX-120, 220, 12],
+      [baseX, 340, baseX+140, 215, 12],
+      [baseX, 380, baseX-70, 245, 10],
+      [baseX, 395, baseX+85, 255, 10],
+
+      // subramas izquierda
+      [baseX-120,220, baseX-175,190, 7],
+      [baseX-120,220, baseX-160,235, 7],
+      [baseX-70,245,  baseX-120,210, 6],
+      [baseX-70,245,  baseX-95,270, 6],
+
+      // subramas derecha
+      [baseX+140,215, baseX+195,185, 7],
+      [baseX+140,215, baseX+185,240, 7],
+      [baseX+85,255,  baseX+135,220, 6],
+      [baseX+85,255,  baseX+115,285, 6],
+    ];
+
+    function strokeBranch(x1,y1,x2,y2,w, t){
+      // t 0..1
+      const xi = x1 + (x2-x1)*t;
+      const yi = y1 + (y2-y1)*t;
+
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      // degradado madera
+      const grad = ctx.createLinearGradient(x1,y1,x2,y2);
+      grad.addColorStop(0, getComputedStyle(document.documentElement).getPropertyValue('--wood2').trim() || "#4a2916");
+      grad.addColorStop(1, getComputedStyle(document.documentElement).getPropertyValue('--wood').trim() || "#6a3b1f");
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = w;
+
+      ctx.beginPath();
+      ctx.moveTo(x1,y1);
+      ctx.lineTo(xi,yi);
+      ctx.stroke();
+    }
+
+    async function animateTreeBranches(){
+      // dibuja tronco+ramas progresivo
+      for(const b of branches){
+        const [x1,y1,x2,y2,w] = b;
+        const steps = 24;
+        for(let i=1;i<=steps;i++){
+          redrawScene({branchProgress:[b,i/steps]});
+          await sleep(14);
+        }
+      }
+    }
+
+    /* ========= Hearts leaves ========= */
+    function heartPath(x,y,size){
+      // dibuja un corazón simple
+      const s = size;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.bezierCurveTo(x - s, y - s, x - 2*s, y + s*0.5, x, y + 2*s);
+      ctx.bezierCurveTo(x + 2*s, y + s*0.5, x + s, y - s, x, y);
+      ctx.closePath();
+    }
+
+    function rnd(min,max){ return min + Math.random()*(max-min); }
+
+    const leafHearts = [];
+    function initLeafHearts(){
+      leafHearts.length = 0;
+      // “copa” tipo corazón grande, pero hecha de muchos corazones pequeños
+      const centerX = baseX + 8;
+      const centerY = 220;
+      const R = 150;
+
+      for(let i=0;i<220;i++){
+        // distribución hacia forma corazón (aprox)
+        const a = Math.random()*Math.PI*2;
+        const r = Math.sqrt(Math.random())*R;
+        let x = centerX + Math.cos(a)*r;
+        let y = centerY + Math.sin(a)*r;
+
+        // empuja para que sea corazón (truco simple)
+        const dx = (x-centerX)/R;
+        const dy = (y-centerY)/R;
+        y -= (1-Math.abs(dx))*22;
+        x += dx*18;
+
+        leafHearts.push({
+          x, y,
+          size: rnd(4.5,7.5),
+          alpha: 0,
+          targetA: rnd(0.55,0.95),
+          color: `rgba(${Math.floor(rnd(200,255))},${Math.floor(rnd(40,120))},${Math.floor(rnd(70,140))},1)`
+        });
+      }
+    }
+
+    const falling = [];
+    function spawnFalling(){
+      // corazones que caen (como hojas)
+      falling.push({
+        x: rnd(baseX-190, baseX+220),
+        y: rnd(120, 260),
+        vx: rnd(-0.25,0.25),
+        vy: rnd(0.9,1.7),
+        size: rnd(5,10),
+        rot: rnd(0,Math.PI*2),
+        vr: rnd(-0.03,0.03),
+        alpha: rnd(0.45,0.9),
+        color: `rgba(${Math.floor(rnd(210,255))},${Math.floor(rnd(60,120))},${Math.floor(rnd(90,160))},1)`
+      });
+    }
+
+    function drawLeafHearts(progress){
+      // progress 0..1 (aparecen poco a poco)
+      const count = Math.floor(leafHearts.length*progress);
+      for(let i=0;i<count;i++){
+        const h = leafHearts[i];
+        h.alpha = Math.min(h.targetA, h.alpha + 0.03);
+
+        ctx.save();
+        ctx.globalAlpha = h.alpha;
+        ctx.fillStyle = h.color;
+        heartPath(h.x, h.y, h.size);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function updateFalling(){
+      // genera y mueve
+      if(Math.random()<0.35) spawnFalling();
+
+      for(const f of falling){
+        f.x += f.vx;
+        f.y += f.vy;
+        f.rot += f.vr;
+      }
+      // limpia los que salen
+      for(let i=falling.length-1;i>=0;i--){
+        if(falling[i].y > cv.height + 40) falling.splice(i,1);
+      }
+    }
+
+    function drawFalling(){
+      for(const f of falling){
+        ctx.save();
+        ctx.translate(f.x, f.y);
+        ctx.rotate(f.rot);
+        ctx.globalAlpha = f.alpha;
+        ctx.fillStyle = f.color;
+        heartPath(0, 0, f.size);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    /* ========= Redraw scene ========= */
+    let leafProgress = 0;
+    function redrawScene(extra){
+      drawBackground();
+
+      // ramas: dibuja todas completas menos la “actual”
+      // 1) dibuja ramas completas hasta la actual
+      for(const b of branches){
+        // si están animando una rama actual, no la dibujes completa
+        if(extra && extra.branchProgress && extra.branchProgress[0] === b) continue;
+        const [x1,y1,x2,y2,w] = b;
+        strokeBranch(x1,y1,x2,y2,w, 1);
+      }
+
+      // 2) rama actual parcial
+      if(extra && extra.branchProgress){
+        const [b,t] = extra.branchProgress;
+        const [x1,y1,x2,y2,w] = b;
+        strokeBranch(x1,y1,x2,y2,w, t);
+      }
+
+      // base del tronco (pequeña sombra)
+      ctx.save();
+      ctx.globalAlpha = 0.08;
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.ellipse(baseX, baseY+18, 70, 18, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+
+      // hojas + caída
+      drawLeafHearts(leafProgress);
+      drawFalling();
+    }
+
+    async function animateLeaves(){
+      leafProgress = 0;
+      const steps = 60;
+      for(let i=0;i<=steps;i++){
+        leafProgress = i/steps;
+        updateFalling();
+        redrawScene();
+        await sleep(24);
+      }
+    }
+
+    /* ========= Typewriter (palabra por palabra) ========= */
+    async function typeWords(text){
+      typedEl.textContent = "";
+      const words = text.split(/\s+/);
+      for(let i=0;i<words.length;i++){
+        typedEl.textContent += (i===0 ? "" : " ") + words[i];
+        // saltos de línea originales
+        typedEl.textContent = typedEl.textContent
+          .replace(/ \n/g,"\n")
+          .replace(/\n /g,"\n");
+
+        // pausa natural
+        const w = words[i];
+        const extra = /[.!?…]$/.test(w) ? 240 : /[,;:]$/.test(w) ? 140 : 70;
+        await sleep(40 + extra);
+      }
+    }
+
+    /* ========= Flow ========= */
+    async function boot(){
+      // muestra overlay de “gira tu teléfono” y luego aparece el corazón
+      await sleep(2200);
+      rotateOverlay.classList.add("hidden");
+      await sleep(450);
+      heartScreen.classList.remove("hidden");
+    }
+
+    async function startAfterHeart(){
+      // oculta pantalla corazón y entra al árbol
+      heartScreen.classList.add("hidden");
+      await sleep(520);
+
+      treeScreen.classList.add("show");
+
+      initLeafHearts();
+      falling.length = 0;
+
+      // ramas + tronco
+      redrawScene();
+      await animateTreeBranches();
+
+      // hojas corazones
+      await animateLeaves();
+
+      // empieza “caída” suave continua durante un rato + texto
+      // (caída sigue mientras se escribe)
+      let running = true;
+      (function loop(){
+        if(!running) return;
+        updateFalling();
+        redrawScene();
+        requestAnimationFrame(loop);
+      })();
+
+      await sleep(450);
+      await typeWords(MESSAGE_RU);
+
+      // deja caer un poquito y luego se mantiene
+      await sleep(1200);
+      running = true; // se queda animando (si quieres parar, cámbialo a false)
+    }
+
+    heartBtn.addEventListener("click", startAfterHeart);
+
+    boot();
+  </script>
+</body>
+</html>
